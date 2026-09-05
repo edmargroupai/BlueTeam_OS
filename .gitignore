@@ -66,3 +66,6 @@ infra/docker/volumes/
 **/target/
 security-languages/go/**/collectors.test
 security-languages/go/**/*.exe
+
+.vercel
+.env*

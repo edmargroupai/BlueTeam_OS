@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: blueteam-os-api
+    runtime: docker
+    dockerfilePath: ./infra/docker/Dockerfile.api
+    plan: starter
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: BTOS_ENV
+        value: production
+      - key: BTOS_API_HOST
+        value: "0.0.0.0"
+      - key: BTOS_API_PORT
+        value: "8080"
+      - key: BTOS_AI_ENABLED
+        value: "false"
+      - key: BTOS_DEV_SEED
+        value: "true"
+      - key: BTOS_WEB_ORIGIN
+        value: https://blueteam-os.vercel.app
+      - key: BTOS_OBJECT_STORE_ROOT
+        value: /data/objects
+      - key: BTOS_SECRET_KEY
+        generateValue: true
+      - key: BTOS_DATABASE_URL
+        sync: false
+      - key: BTOS_DEV_PASSWORD
+        sync: false
+      - key: BTOS_SUPABASE_URL
+        sync: false
+      - key: BTOS_SUPABASE_PUBLISHABLE_KEY
+        sync: false

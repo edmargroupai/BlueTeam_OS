@@ -12,13 +12,15 @@ COPY services ./services
 COPY detections ./detections
 COPY blue_range ./blue_range
 COPY migrations ./migrations
+COPY scripts ./scripts
 
-RUN pip install --no-cache-dir -e ".[dev]"
+RUN pip install --no-cache-dir -e .
 
-ENV PYTHONPATH=/app/packages/schemas:/app/packages/python-common:/app/packages/detection-sdk:/app/packages/playbook-sdk:/app/packages/quality-engine:/app/packages/blue-range:/app/services/api:/app/detections
 ENV BTOS_API_HOST=0.0.0.0
 ENV BTOS_API_PORT=8080
+ENV BTOS_OBJECT_STORE_ROOT=/data/objects
 
 EXPOSE 8080
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "services/api"]
+# Bootstrap adds package paths at import time; migrate patches hosted Postgres columns.
+CMD ["sh", "-c", "python scripts/migrate.py && python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --app-dir services/api"]

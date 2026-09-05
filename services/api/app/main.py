@@ -18,6 +18,7 @@ from app.core.db import get_engine, get_session_factory
 from app.core.errors import blueteam_error_handler, http_error_handler, unhandled_error_handler
 from app.core.logging import configure_logging
 from app.core.middleware import RequestContextMiddleware
+from app.core.schema_patches import ensure_schema_patches
 from app.models.base import Base
 from app.services.seed import seed_if_empty
 
@@ -27,7 +28,9 @@ def create_app() -> FastAPI:
     configure_logging(settings.log_level)
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        Base.metadata.create_all(bind=get_engine())
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        ensure_schema_patches(engine)
         session = get_session_factory()()
         try:
             seed_if_empty(session)

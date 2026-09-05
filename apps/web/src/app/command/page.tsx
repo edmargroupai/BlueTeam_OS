@@ -15,7 +15,26 @@ type Overview = {
   severity: Record<string, number>;
   quality: { total: number; band: string; model_version: string };
   ai_required: boolean;
+  telemetry_health?: {
+    events: number;
+    dead_letter: number;
+    dead_letter_ratio: number;
+    all_configured_connected: boolean;
+  };
+  detection_health?: {
+    catalogue_rules: number;
+    revisions: number;
+    by_status: Record<string, number>;
+    findings: number;
+    open_alerts: number;
+  };
+  attack_overview?: {
+    techniques_observed: number;
+    top_techniques: { technique: string; count: number }[];
+  };
+  automation_queue?: { id: string; title: string; status: string; queue: string; updated_at: string }[];
   top_alerts: { id: string; title: string; severity: string; created_at: string }[];
+  top_incidents?: { id: string; title: string; status: string; severity: string; updated_at: string }[];
   top_risk_entities?: { id: string; entity_type: string; display_name: string; risk_score: number }[];
 };
 
@@ -34,7 +53,7 @@ export default function CommandPage() {
   return (
     <AppShell
       title="Security Command Center"
-      description="Live control-plane posture from the API. Empty counters mean no tenant telemetry yet — they are not placeholders."
+      description="Live Operations from the control plane. Empty panels mean no tenant telemetry yet — not placeholders."
     >
       {loading ? <StateBox kind="loading" text="Loading tenant posture…" /> : null}
       {error ? <StateBox kind="error" text={error} /> : null}
@@ -45,7 +64,8 @@ export default function CommandPage() {
             <Metric label="Findings" value={data.findings} />
             <Metric label="Events stored" value={data.events} />
             <Metric label="Dead letter" value={data.dead_letter} />
-            <Metric label="Grouped incidents" value={data.incidents ?? 0} />
+            <Metric label="Incidents" value={data.incidents ?? 0} />
+            <Metric label="Catalogue rules" value={data.detections} />
           </div>
           <Panel title="QUALITY INDEX">
             <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
@@ -60,6 +80,115 @@ export default function CommandPage() {
                 </div>
               </div>
             </div>
+          </Panel>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Panel title="TELEMETRY HEALTH">
+              {!data.telemetry_health ? (
+                <StateBox kind="empty" text="Telemetry health not reported by API." />
+              ) : (
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
+                  <div>events={data.telemetry_health.events}</div>
+                  <div>dead_letter={data.telemetry_health.dead_letter}</div>
+                  <div>dlq_ratio={data.telemetry_health.dead_letter_ratio.toFixed(4)}</div>
+                  <div>
+                    configured_plane=
+                    {data.telemetry_health.all_configured_connected ? "connected" : "degraded"}
+                  </div>
+                </div>
+              )}
+            </Panel>
+            <Panel title="DETECTION HEALTH">
+              {!data.detection_health ? (
+                <StateBox kind="empty" text="Detection health not reported by API." />
+              ) : (
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
+                  <div>catalogue={data.detection_health.catalogue_rules}</div>
+                  <div>revisions={data.detection_health.revisions}</div>
+                  <div>findings={data.detection_health.findings}</div>
+                  <div>open_alerts={data.detection_health.open_alerts}</div>
+                  <div>
+                    statuses=
+                    {Object.entries(data.detection_health.by_status)
+                      .map(([k, v]) => `${k}:${v}`)
+                      .join(" ") || "none"}
+                  </div>
+                </div>
+              )}
+            </Panel>
+          </div>
+          <Panel title="ATT&CK OVERVIEW">
+            {!data.attack_overview || data.attack_overview.techniques_observed === 0 ? (
+              <StateBox kind="empty" text="No ATT&CK techniques observed on findings or incidents yet." />
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                    <th>Technique</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.attack_overview.top_techniques.map((row) => (
+                    <tr key={row.technique} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{row.technique}</td>
+                      <td>{row.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Panel>
+          <Panel title="AUTOMATION QUEUE">
+            {!data.automation_queue || data.automation_queue.length === 0 ? (
+              <StateBox kind="empty" text="No open IR work items in the response queue." />
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                    <th>Queue</th>
+                    <th>Status</th>
+                    <th>Title</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.automation_queue.map((item) => (
+                    <tr key={item.id} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td>{item.queue}</td>
+                      <td>{item.status}</td>
+                      <td>{item.title}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Panel>
+          <Panel title="TOP INCIDENTS">
+            {!data.top_incidents || data.top_incidents.length === 0 ? (
+              <StateBox kind="empty" text="No open incidents. Convert an alert or rebuild correlation groups." />
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Title</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.top_incidents.map((item) => (
+                    <tr key={item.id} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td>
+                        <Severity value={item.severity} />
+                      </td>
+                      <td>{item.status}</td>
+                      <td>{item.title}</td>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{item.updated_at}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </Panel>
           <Panel title="TOP-RISK ENTITIES">
             {!data.top_risk_entities || data.top_risk_entities.length === 0 ? (
