@@ -25,6 +25,8 @@ EXTRA = [
     ROOT / "packages" / "correlation",
     ROOT / "packages" / "entity-graph",
     ROOT / "packages" / "self-improvement",
+    ROOT / "packages" / "attack-coverage",
+    ROOT / "packages" / "connectors",
     ROOT / "packages" / "object-store",
     ROOT / "packages" / "enrichment",
     ROOT / "packages" / "ingest-adapters",

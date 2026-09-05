@@ -17,9 +17,11 @@ const NAV = [
     label: "Detect",
     items: [
       { href: "/detections", label: "Detection Engineering" },
+      { href: "/attack", label: "ATT&CK Coverage" },
       { href: "/identity", label: "Identity Defence" },
       { href: "/network", label: "Network Investigation" },
       { href: "/endpoint", label: "Endpoint Investigation" },
+      { href: "/connectors", label: "Connectors" },
     ],
   },
   {

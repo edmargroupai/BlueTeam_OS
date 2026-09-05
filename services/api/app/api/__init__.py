@@ -2,11 +2,13 @@ from fastapi import APIRouter
 
 from app.api import (
     alerts,
+    attack,
     audit,
     auth,
     blue_range,
     broker,
     command,
+    connectors,
     detections,
     events,
     evidence,
@@ -36,6 +38,8 @@ api_router.include_router(command.router)
 api_router.include_router(languages.router)
 api_router.include_router(hunts.router)
 api_router.include_router(intel.router)
+api_router.include_router(attack.router)
+api_router.include_router(connectors.router)
 api_router.include_router(broker.router)
 api_router.include_router(investigate.router)
 api_router.include_router(graph.router)

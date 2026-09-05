@@ -283,13 +283,80 @@ def build_checks(db: Session, tenant_id: str | None) -> list[QualityCheckResult]
         )
     )
 
+    from blueteam_attack import compute_coverage
+    from blueteam_connectors import EndpointActionRequest, get_connector
     from blueteam_enrich.engine import enrich_event
     from blueteam_ingest.syslog import parse_syslog_line
+    from blueteam_network.normalize import normalize_suricata, normalize_zeek
     from blueteam_objects.store import open_store
 
+    from app.services.detection import get_registry
     from detections.lint import lint_rules
 
     demo = "ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    detection_maps = [
+        (rule.meta.rule_id, list(rule.meta.mitre_techniques), list(rule.meta.data_sources), rule.meta.status)
+        for rule in get_registry().all_rules()
+    ]
+    coverage = compute_coverage(
+        detection_maps=detection_maps,
+        telemetry_source_types=["identity", "zeek"],
+        finding_technique_counts={},
+        validated_rule_ids={rule_id for rule_id, _, _, status in detection_maps if status in {"tested", "promoted"}},
+    )
+    sample = next((item for item in coverage["techniques"] if item["detections"]), None)
+    checks.append(
+        _check(
+            "architecture.attack_coverage",
+            "defensive_architecture",
+            "ATT&CK coverage maps detections, telemetry, gaps",
+            15,
+            bool(sample and sample["gaps"] is not None and "coverage_score" in sample),
+            [sample["technique_id"]] if sample else [],
+            "Coverage score must cite detection mapping and gap list per technique.",
+        )
+    )
+
+    wazuh = get_connector("wazuh")
+    denied = wazuh.request_action(EndpointActionRequest(action="isolate_host", agent_id="001", dry_run=True))
+    zeek_evt = normalize_zeek(
+        {
+            "_path": "dns",
+            "ts": "2026-09-05T16:00:00Z",
+            "uid": "Cqualitydns",
+            "id.orig_h": "10.0.0.1",
+            "id.resp_h": "8.8.8.8",
+            "proto": "udp",
+            "query": "example.test",
+        },
+        demo,
+    )
+    suri_evt = normalize_suricata(
+        {
+            "event_type": "alert",
+            "timestamp": "2026-09-05T16:00:01Z",
+            "flow_id": 1,
+            "src_ip": "10.0.0.1",
+            "dest_ip": "1.2.3.4",
+            "alert": {"signature": "quality", "severity": 2},
+        },
+        demo,
+    )
+    checks.append(
+        _check(
+            "architecture.connectors",
+            "continuous_monitoring",
+            "Wazuh policy gate + Zeek/Suricata normalisation",
+            15,
+            denied.status == "denied"
+            and zeek_evt.source_type == "zeek"
+            and suri_evt.source_type == "suricata"
+            and suri_evt.category == "alert",
+            [denied.action_id, zeek_evt.id, suri_evt.id],
+            "High-impact actions stay denied; network parsers must emit canonical source types.",
+        )
+    )
+
     syslog_event = parse_syslog_line(
         "<34>1 2026-09-05T10:00:00Z sshd sshd - - - Failed password for alice from 203.0.113.77",
         demo,

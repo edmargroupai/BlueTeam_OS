@@ -60,10 +60,11 @@ def normalize_zeek(raw: dict[str, Any], tenant_id: str, *, log_type: str | None 
     kind = (log_type or raw.get("_path") or raw.get("log_type") or "conn").lower()
     if kind not in ZEEK_SOURCES:
         raise ValueError(f"unsupported Zeek log type {kind}")
-    src = raw.get("id.orig_h") or raw.get("orig_h") or (raw.get("id") or {}).get("orig_h")
-    dst = raw.get("id.resp_h") or raw.get("resp_h") or (raw.get("id") or {}).get("resp_h")
-    sport = raw.get("id.orig_p") or raw.get("orig_p") or (raw.get("id") or {}).get("orig_p")
-    dport = raw.get("id.resp_p") or raw.get("resp_p") or (raw.get("id") or {}).get("resp_p")
+    id_obj = raw.get("id") if isinstance(raw.get("id"), dict) else {}
+    src = raw.get("id.orig_h") or raw.get("orig_h") or id_obj.get("orig_h")
+    dst = raw.get("id.resp_h") or raw.get("resp_h") or id_obj.get("resp_h")
+    sport = raw.get("id.orig_p") or raw.get("orig_p") or id_obj.get("orig_p")
+    dport = raw.get("id.resp_p") or raw.get("resp_p") or id_obj.get("resp_p")
     proto = raw.get("proto") or raw.get("protocol")
     category = {
         "conn": "network",
