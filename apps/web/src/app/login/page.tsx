@@ -13,7 +13,7 @@ type TenantList = { items: { id: string; name: string }[] };
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("detector@demo.blueteam.local");
+  const [email, setEmail] = useState("edmargroupai@gmail.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

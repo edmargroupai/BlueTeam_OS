@@ -34,6 +34,9 @@ def create_app() -> FastAPI:
         session = get_session_factory()()
         try:
             seed_if_empty(session)
+            from app.services.seed import ensure_dev_credentials
+
+            ensure_dev_credentials(session)
             from app.services.rules import sync_catalog_revisions
 
             sync_catalog_revisions(session)

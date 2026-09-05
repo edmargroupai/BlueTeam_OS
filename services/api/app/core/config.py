@@ -1,13 +1,22 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_ROOT = Path(__file__).resolve().parents[4]
+_ENV_FILES = (
+    str(_ROOT / ".env"),
+    str(_ROOT / ".env.local"),
+    ".env",
+    ".env.local",
+)
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="BTOS_", env_file=(".env", ".env.local"), extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="BTOS_", env_file=_ENV_FILES, extra="ignore")
 
     env: str = "development"
     log_level: str = "INFO"
@@ -36,7 +45,10 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     dev_seed: bool = True
+    # Shared password for local seed users (never use in production).
     dev_password: str = "dev_only_change_me"
+    # Primary local operator email created/updated when BTOS_DEV_SEED=true.
+    dev_operator_email: str = "detector@demo.blueteam.local"
     access_token_minutes: int = 30
     refresh_token_days: int = 7
     oidc_issuer: str = ""
