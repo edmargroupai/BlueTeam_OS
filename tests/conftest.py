@@ -32,10 +32,14 @@ get_settings.cache_clear()
 def client() -> Generator[TestClient, None, None]:
     get_settings.cache_clear()
     reset_engine()
+    from app.api.replay import LAB
+
+    LAB.clear()
     app = create_app()
     Base.metadata.create_all(bind=get_engine())
     with TestClient(app) as test_client:
         yield test_client
+    LAB.clear()
     reset_engine()
     get_settings.cache_clear()
 

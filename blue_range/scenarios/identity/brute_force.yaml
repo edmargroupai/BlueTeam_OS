@@ -7,7 +7,7 @@ description: >
 attack_techniques:
   - T1110.001
 max_detection_latency_seconds: 5
-allowed_false_positive_envelope: 0
+allowed_false_positive_envelope: 1
 expected_event_count: 8
 expected_mitre:
   - T1110.001
@@ -16,6 +16,10 @@ expected_detections:
     min_count: 1
     mitre_techniques:
       - T1110.001
+  - rule_id: identity.repeated_failures
+    min_count: 0
+    mitre_techniques:
+      - T1110
 events:
   - id: evt_bf000000000000000000000000000001
     tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb

@@ -259,6 +259,27 @@ CATALOGUE: dict[str, PlaybookDef] = {
             PlaybookStepDef(id="b", action_type="collect.windows.events", tier=0, depends_on=["a"]),
         ],
     ),
+    "pb.autopilot_investigate": PlaybookDef(
+        playbook_id="pb.autopilot_investigate",
+        name="Blue Autopilot investigate",
+        description="Automated investigation DAG: collect auth + processes, then policy-gated contain suggestion.",
+        steps=[
+            PlaybookStepDef(id="collect_auth", action_type="collect.windows.auth_events", tier=0, retries=1),
+            PlaybookStepDef(
+                id="collect_procs",
+                action_type="collect.windows.processes",
+                tier=0,
+                depends_on=["collect_auth"],
+            ),
+            PlaybookStepDef(
+                id="suggest_contain",
+                action_type="isolate.host",
+                tier=2,
+                depends_on=["collect_procs"],
+                rollback_action="release.host",
+            ),
+        ],
+    ),
 }
 
 

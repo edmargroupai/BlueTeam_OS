@@ -1,0 +1,13 @@
+/* Generated from packages/design-tokens — premium visual foundation (PARTIAL). */
+:root {
+  --btos-ink: #0b1220;
+  --btos-paper: #f3f6fb;
+  --btos-accent: #1f6feb;
+  --btos-accent-dim: rgba(31, 111, 235, 0.12);
+  --btos-danger: #b42318;
+  --btos-warn: #b54708;
+  --btos-ok: #027a48;
+  --btos-border: #d0d7e2;
+  --btos-mono: "IBM Plex Mono", "Cascadia Mono", ui-monospace, monospace;
+  --btos-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+}

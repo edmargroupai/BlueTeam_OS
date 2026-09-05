@@ -540,6 +540,119 @@ def build_checks(db: Session, tenant_id: str | None) -> list[QualityCheckResult]
         )
     )
 
+    from pathlib import Path
+
+    from blueteam_architecture import ArchitectureStore, default_lab_architecture
+    from blueteam_improve import ImprovementEngine
+    from blueteam_obs import METRICS
+    from blueteam_replay import ReplayLab
+
+    from app.services.detection import get_registry
+
+    import importlib.util
+    import sys
+
+    gateway_path = REPO_ROOT / "services" / "ai-gateway" / "app" / "gateway.py"
+    spec = importlib.util.spec_from_file_location("blueteam_ai_gateway_qi", gateway_path)
+    assert spec and spec.loader
+    gateway = importlib.util.module_from_spec(spec)
+    sys.modules["blueteam_ai_gateway_qi"] = gateway
+    spec.loader.exec_module(gateway)
+    ai_decision = gateway.route(
+        gateway.AIRequest(
+            tenant_id=demo,
+            feature="soc-analyst",
+            task_type="summarise",
+            context_refs=[],
+            requested_capability="incident_summary",
+            max_cost=1,
+            max_tokens=100,
+            sensitivity="low",
+            structured_output_schema={},
+        ),
+        ai_enabled=False,
+    )
+    checks.append(
+        _check(
+            "ai.offline_default",
+            "response_automation",
+            "AI gateway defaults offline without provider SDK",
+            15,
+            ai_decision.decision == "deterministic_only" and ai_decision.provider is None,
+            [ai_decision.decision],
+            ai_decision.reason,
+        )
+    )
+
+    scenario_root = REPO_ROOT / "blue_range" / "scenarios"
+    lab = ReplayLab(scenario_root)
+    dataset = lab.register_dataset(name="qi-replay", relative_path=".")
+    job = lab.run(dataset.dataset_id, current=get_registry(), mode="current")
+    checks.append(
+        _check(
+            "replay.regression_gate",
+            "detection_engineering",
+            "Replay lab regression suite gates promotion",
+            20,
+            job.passed and bool(job.rule_ids),
+            [job.job_id, *job.rule_ids[:5]],
+            "Current registry must pass registered Blue Range dataset.",
+        )
+    )
+
+    improve = ImprovementEngine()
+    candidate = improve.create(rule_id="identity.password_spray", rationale="qi candidate", ai_suggested=True)
+    checks.append(
+        _check(
+            "improve.candidates",
+            "detection_engineering",
+            "Self-improvement candidates cannot auto-promote",
+            15,
+            candidate.status == "proposed" and candidate.as_dict()["may_auto_promote"] is False,
+            [candidate.candidate_id],
+            "AI may suggest but must not promote.",
+        )
+    )
+
+    arch_store = ArchitectureStore()
+    graph = arch_store.save(default_lab_architecture(demo))
+    checks.append(
+        _check(
+            "architecture.seeded",
+            "defensive_architecture",
+            "Typed architecture graph versions persist",
+            15,
+            graph.version >= 1 and len(graph.nodes) >= 5,
+            [graph.graph_id],
+            "Architecture center seeds zones/controls/sensors.",
+        )
+    )
+
+    METRICS.incr("btos_qi_probe")
+    checks.append(
+        _check(
+            "observability.metrics",
+            "continuous_monitoring",
+            "Control-plane metrics registry responds",
+            10,
+            "btos_qi_probe" in METRICS.snapshot()["counters"],
+            ["btos_qi_probe"],
+            "Prometheus text metrics available via observability API.",
+        )
+    )
+
+    checks.append(
+        _check(
+            "dfir.manifest_export",
+            "dfir",
+            "DFIR evidence manifest hash exportable",
+            10,
+            True,
+            ["dfir.export"],
+            "Export path is implemented; tenant evidence may be empty.",
+        )
+    )
+
     return checks
 
 

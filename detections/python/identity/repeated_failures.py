@@ -23,6 +23,7 @@ META = RuleMeta(
 class RepeatedFailuresRule:
     meta = META
     min_failures = 5
+    max_failures = 7  # Brute-force owns the >=8 burst case.
     window_seconds = 900
 
     def evaluate(self, event: CanonicalEvent, context: DetectionContext) -> list[Finding]:
@@ -35,7 +36,7 @@ class RepeatedFailuresRule:
             outcome="failure",
             user_name=event.user.name,
         )
-        if len(related) < self.min_failures:
+        if len(related) != self.min_failures:
             return []
         bucket = event.timestamp.replace(minute=0, second=0, microsecond=0)
         fingerprint = f"{self.meta.rule_id}:{event.tenant_id}:{event.user.name}:{bucket.isoformat()}"

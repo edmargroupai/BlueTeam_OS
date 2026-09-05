@@ -1,0 +1,43 @@
+id: br-network-lateral-smb
+family: network
+name: Lateral movement SMB indicator
+description: >
+  Network telemetry shows administrative SMB share access pattern used for lateral movement fixtures.
+attack_techniques:
+  - T1021.002
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 5
+expected_event_count: 2
+expected_mitre:
+  - T1021.002
+expected_detections: []
+events:
+  - id: evt_lat0000000000000000000000000001
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T09:00:01Z"
+    ingested_at: "2026-09-05T09:00:02Z"
+    source: zeek.conn
+    source_type: zeek
+    event_type: conn
+    category: network
+    src_ip: 10.0.0.50
+    dst_ip: 10.0.0.20
+    dst_port: 445
+    protocol: tcp
+    action: conn
+    outcome: success
+    raw_event: { "_path": "conn", "id.orig_h": "10.0.0.50", "id.resp_h": "10.0.0.20", "id.resp_p": 445 }
+  - id: evt_lat0000000000000000000000000002
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T09:00:05Z"
+    ingested_at: "2026-09-05T09:00:06Z"
+    source: suricata.alert
+    source_type: suricata
+    event_type: alert
+    category: alert
+    src_ip: 10.0.0.50
+    dst_ip: 10.0.0.20
+    dst_port: 445
+    action: "ET POLICY SMB"
+    severity: medium
+    raw_event: { event_type: alert, alert: { signature: "ET POLICY SMB", severity: 2 } }

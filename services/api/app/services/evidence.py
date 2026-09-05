@@ -39,15 +39,65 @@ def register_event_evidence(
         integrity_hash=event.raw_hash,
         object_uri=None,
         parser_version="canonical-1.0.0",
-        transformation_history=["normalize.generic"],
+        transformation_history=["normalize.generic", "hash", "seal"],
         confidence_level=int(ConfidenceLevel.PRIMARY_TELEMETRY),
-        payload={"event_id": event_id, "raw_hash": event.raw_hash},
+        payload={
+            "event_id": event_id,
+            "raw_hash": event.raw_hash,
+            "chain_of_custody": [
+                {
+                    "action": "acquired",
+                    "actor_id": collector_identity,
+                    "timestamp": utcnow().isoformat(),
+                },
+                {
+                    "action": "hashed",
+                    "actor_id": "system",
+                    "timestamp": utcnow().isoformat(),
+                    "integrity_hash": event.raw_hash,
+                },
+                {
+                    "action": "sealed",
+                    "actor_id": "system",
+                    "timestamp": utcnow().isoformat(),
+                },
+            ],
+        },
         sealed=True,
     )
     db.add(evidence)
     db.flush()
     return evidence.id
 
+
+def append_custody(
+    db: Session,
+    *,
+    tenant_id: str,
+    evidence_id: str,
+    actor_id: str,
+    action: str,
+    notes: str | None = None,
+) -> dict:
+    row = db.execute(
+        select(Evidence).where(Evidence.tenant_id == tenant_id, Evidence.id == evidence_id)
+    ).scalar_one_or_none()
+    if row is None:
+        raise BlueTeamError("NOT_FOUND", "Evidence not found", 404)
+    payload = dict(row.payload or {})
+    chain = list(payload.get("chain_of_custody") or [])
+    event = {
+        "id": new_id("coc"),
+        "action": action,
+        "actor_id": actor_id,
+        "timestamp": utcnow().isoformat(),
+        "notes": notes,
+    }
+    chain.append(event)
+    payload["chain_of_custody"] = chain
+    row.payload = payload
+    db.flush()
+    return event
 
 def list_evidence(db: Session, tenant_id: str) -> list[Evidence]:
     return list(

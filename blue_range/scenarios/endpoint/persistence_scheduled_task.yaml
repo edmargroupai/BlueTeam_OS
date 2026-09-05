@@ -1,0 +1,27 @@
+id: br-endpoint-persistence-scheduled-task
+family: endpoint
+name: Persistence via scheduled task indicator
+description: >
+  Endpoint telemetry shows scheduled task registration used as a persistence fixture family.
+attack_techniques:
+  - T1053
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 8
+expected_event_count: 1
+expected_mitre:
+  - T1053
+expected_detections: []
+events:
+  - id: evt_persist000000000000000000000002
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T08:00:11Z"
+    ingested_at: "2026-09-05T08:00:12Z"
+    source: sysmon
+    source_type: endpoint
+    event_type: scheduled_task
+    category: persistence
+    action: register
+    outcome: success
+    host: { name: ws-office-01 }
+    attributes: { task: "\\UpdateCheck" }
+    raw_event: { EventID: 106 }

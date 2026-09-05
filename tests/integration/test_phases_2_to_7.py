@@ -159,6 +159,13 @@ def test_scheduled_rule_and_promotion(client: TestClient, demo_tenant: str) -> N
     history = client.get("/api/v1/detections/rules/identity.password_spray/history", headers=headers)
     assert history.status_code == 200
     assert history.json()["items"]
+    blocked = client.post("/api/v1/detections/rules/identity.password_spray/promote", headers=headers)
+    assert blocked.status_code == 409
+    dataset = client.post("/api/v1/replay/datasets", headers=headers, json={"name": "phase6-gate", "relative_path": "."})
+    assert dataset.status_code == 200, dataset.text
+    job = client.post("/api/v1/replay/jobs", headers=headers, json={"dataset_id": dataset.json()["dataset_id"], "mode": "current"})
+    assert job.status_code == 200, job.text
+    assert job.json()["passed"] is True
     promoted = client.post("/api/v1/detections/rules/identity.password_spray/promote", headers=headers)
     assert promoted.status_code == 200, promoted.text
     assert promoted.json()["status"] == "promoted"

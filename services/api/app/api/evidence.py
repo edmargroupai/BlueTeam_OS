@@ -9,6 +9,7 @@ from app.core.db import get_db
 from app.core.deps import Permission
 from app.services.auth import TenantActor
 from app.services.evidence import (
+    append_custody,
     evidence_manifest_hash,
     list_evidence,
     validate_claim,
@@ -76,3 +77,26 @@ def validate_ai_or_analyst_claim(
     )
     validate_claim(db, actor.tenant_id, claim)
     return {"valid": True}
+
+
+class CustodyBody(BaseModel):
+    action: str = "reviewed"
+    notes: str | None = None
+
+
+@router.post("/{evidence_id}/custody")
+def custody_event(
+    evidence_id: str,
+    body: CustodyBody,
+    actor: TenantActor = Depends(Permission("evidence:write")),
+    db: Session = Depends(get_db),
+) -> dict:
+    event = append_custody(
+        db,
+        tenant_id=actor.tenant_id,
+        evidence_id=evidence_id,
+        actor_id=actor.user_id,
+        action=body.action,
+        notes=body.notes,
+    )
+    return {"evidence_id": evidence_id, "event": event}

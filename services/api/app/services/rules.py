@@ -89,5 +89,15 @@ def set_status(db: Session, rule_id: str, status: str, *, actor_id: str) -> Rule
     return row
 
 
-def promote(db: Session, rule_id: str, *, actor_id: str) -> RuleRevision:
+def promote(db: Session, rule_id: str, *, actor_id: str, bypass_regression: bool = False) -> RuleRevision:
+    if not bypass_regression:
+        from app.api.replay import regression_gate
+        from blueteam_common.errors import BlueTeamError
+
+        if not regression_gate(rule_id):
+            raise BlueTeamError(
+                "REGRESSION_GATE",
+                f"Promotion blocked: no passing replay job covering {rule_id}",
+                409,
+            )
     return set_status(db, rule_id, "promoted", actor_id=actor_id)
