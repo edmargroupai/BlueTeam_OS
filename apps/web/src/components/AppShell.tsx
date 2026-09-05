@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { clearSession, getSession } from "@/lib/api";
+import { severityColor } from "@/lib/tokens.generated";
 
 const NAV = [
   {
@@ -68,39 +69,23 @@ export function AppShell({
   }, [router]);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
-      <aside
-        style={{
-          borderRight: "1px solid var(--border)",
-          background: varSurface(),
-          padding: "20px 16px",
-        }}
-      >
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.08em" }}>
-          BLUE TEAM OS
-        </div>
+    <div className="btos-shell" data-density="comfortable">
+      <aside className="btos-shell__aside">
+        <div className="btos-shell__brand">BLUE TEAM OS</div>
         <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 24 }}>Center · Control plane</div>
         {NAV.map((group) => (
-          <div key={group.label} style={{ marginBottom: 18 }}>
-            <div style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.12em" }}>{group.label}</div>
-            {group.items.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  style={{
-                    display: "block",
-                    padding: "6px 8px",
-                    marginTop: 4,
-                    borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
-                    background: active ? "var(--accent-dim)" : "transparent",
-                  }}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+          <div key={group.label} className="btos-nav-group">
+            <div className="btos-nav-group__label">{group.label}</div>
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="btos-nav-link"
+                data-active={pathname === item.href}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         ))}
         <button
@@ -114,19 +99,15 @@ export function AppShell({
           Sign out
         </button>
       </aside>
-      <main style={{ padding: "24px 28px" }}>
+      <main className="btos-shell__main">
         <header style={{ marginBottom: 20 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 560 }}>{title}</h1>
+          <h1 style={{ margin: 0, fontSize: "var(--btos-type-title-size)", fontWeight: 560 }}>{title}</h1>
           <p style={{ margin: "6px 0 0", color: "var(--muted)", maxWidth: 720 }}>{description}</p>
         </header>
         {children}
       </main>
     </div>
   );
-}
-
-function varSurface() {
-  return "var(--surface)";
 }
 
 export function ghostButton(): CSSProperties {
@@ -140,45 +121,28 @@ export function ghostButton(): CSSProperties {
   };
 }
 
-export function Panel({
-  title,
-  children,
-}: {
-  title?: string;
-  children: ReactNode;
-}) {
+export function Panel({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        padding: 16,
-        marginBottom: 16,
-      }}
-    >
-      {title ? (
-        <h2 style={{ margin: "0 0 12px", fontSize: 13, color: "var(--muted)", letterSpacing: "0.08em" }}>
-          {title}
-        </h2>
-      ) : null}
+    <section className="btos-panel">
+      {title ? <h2 className="btos-panel__title">{title}</h2> : null}
       {children}
     </section>
   );
 }
 
-export function StateBox({ kind, text }: { kind: "loading" | "empty" | "error"; text: string }) {
+export function StateBox({ kind, text }: { kind: "loading" | "empty" | "error" | "disabled"; text: string }) {
   const color = kind === "error" ? "var(--critical)" : "var(--muted)";
   return (
-    <div style={{ padding: 24, border: "1px dashed var(--border)", color, textAlign: "center" }}>{text}</div>
+    <div className="btos-state" style={{ color }} role="status">
+      {text}
+    </div>
   );
 }
 
 export function Severity({ value }: { value: string }) {
-  const map: Record<string, string> = {
-    critical: "var(--critical)",
-    high: "var(--high)",
-    medium: "var(--medium)",
-    low: "var(--low)",
-  };
-  return <span style={{ color: map[value] ?? "var(--info)", fontFamily: "var(--font-mono)" }}>{value}</span>;
+  return (
+    <span className="mono" style={{ color: severityColor(value) }}>
+      {value}
+    </span>
+  );
 }

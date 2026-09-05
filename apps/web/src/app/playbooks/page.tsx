@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StateBox } from "@/components/AppShell";
+import { PlaybookFlow } from "@/components/charts/PlaybookFlow";
 import { ApiError, api } from "@/lib/api";
 
 type Playbook = {
@@ -58,12 +59,7 @@ export default function PlaybooksPage() {
       {items?.map((item) => (
         <Panel key={item.playbook_id} title={item.name}>
           <p style={{ color: "var(--muted)" }}>{item.description}</p>
-          {item.steps.map((step) => (
-            <div key={step.id} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
-              {step.id} · {step.action_type} · T{step.tier}
-              {step.rollback_action ? ` · rollback ${step.rollback_action}` : ""}
-            </div>
-          ))}
+          <PlaybookFlow steps={item.steps} />
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <button type="button" disabled={busy} onClick={() => run(item.playbook_id, true)}>
               Dry-run
@@ -76,11 +72,11 @@ export default function PlaybooksPage() {
       ))}
       {lastRun ? (
         <Panel title={`LAST RUN · ${lastRun.status}`}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
+          <div className="mono">
             {lastRun.run_id} · {lastRun.playbook_id} · dry_run={String(lastRun.dry_run)}
           </div>
           {lastRun.steps.map((step) => (
-            <div key={step.step_id} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
+            <div key={step.step_id} className="mono">
               {step.step_id} → {step.status}
               {step.rollback_hook ? ` · rollback {${step.rollback_hook}}` : ""}
             </div>

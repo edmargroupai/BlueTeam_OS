@@ -7,19 +7,36 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "tokens": "python ../../scripts/generate_tokens.py",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "node ./scripts/build-storybook.mjs"
   },
   "dependencies": {
+    "@xyflow/react": "^12.11.6",
+    "cytoscape": "^3.34.2",
+    "echarts": "^6.1.0",
+    "echarts-for-react": "^3.0.6",
+    "motion": "^13.2.0",
     "next": "^15.2.4",
     "react": "^19.0.0",
+    "react-cytoscapejs": "^2.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "^8.6.14",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/react": "^8.6.14",
+    "@storybook/react-vite": "^8.6.14",
+    "@types/cytoscape": "^3.21.9",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.2.4",
-    "typescript": "^5.7.3"
+    "storybook": "^8.6.14",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.2"
   }
 }

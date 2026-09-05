@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AppShell, Panel, Severity, StateBox } from "@/components/AppShell";
+import { RiskBars, SeverityDonut } from "@/components/charts/SeverityCharts";
+import { Grid, MetricTile } from "@/components/ui/Primitives";
 import { ApiError, api } from "@/lib/api";
 
 type Overview = {
@@ -53,20 +55,37 @@ export default function CommandPage() {
   return (
     <AppShell
       title="Security Command Center"
-      description="Live Operations from the control plane. Empty panels mean no tenant telemetry yet — not placeholders."
+      description="Live Operations from the control plane. Charts encode tenant telemetry only — empty means no data yet."
     >
       {loading ? <StateBox kind="loading" text="Loading tenant posture…" /> : null}
       {error ? <StateBox kind="error" text={error} /> : null}
       {data ? (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-            <Metric label="Open alerts" value={data.open_alerts} />
-            <Metric label="Findings" value={data.findings} />
-            <Metric label="Events stored" value={data.events} />
-            <Metric label="Dead letter" value={data.dead_letter} />
-            <Metric label="Incidents" value={data.incidents ?? 0} />
-            <Metric label="Catalogue rules" value={data.detections} />
-          </div>
+          <Grid cols={4}>
+            <MetricTile label="Open alerts" value={data.open_alerts} />
+            <MetricTile label="Findings" value={data.findings} />
+            <MetricTile label="Events stored" value={data.events} />
+            <MetricTile label="Dead letter" value={data.dead_letter} />
+            <MetricTile label="Incidents" value={data.incidents ?? 0} />
+            <MetricTile label="Catalogue rules" value={data.detections} />
+            <MetricTile label="Quality index" value={data.quality.total} />
+            <MetricTile label="Quality band" value={data.quality.band} />
+          </Grid>
+
+          <Grid cols={2}>
+            <Panel title="SEVERITY DISTRIBUTION">
+              <SeverityDonut severity={data.severity} />
+            </Panel>
+            <Panel title="TOP-RISK ENTITIES">
+              <RiskBars
+                items={(data.top_risk_entities ?? []).slice(0, 8).map((entity) => ({
+                  name: entity.display_name,
+                  value: entity.risk_score,
+                }))}
+              />
+            </Panel>
+          </Grid>
+
           <Panel title="QUALITY INDEX">
             <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
               <div style={{ fontSize: 36, fontFamily: "var(--font-mono)" }}>{data.quality.total}</div>
@@ -81,12 +100,13 @@ export default function CommandPage() {
               </div>
             </div>
           </Panel>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+          <Grid cols={2}>
             <Panel title="TELEMETRY HEALTH">
               {!data.telemetry_health ? (
                 <StateBox kind="empty" text="Telemetry health not reported by API." />
               ) : (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
+                <div className="mono">
                   <div>events={data.telemetry_health.events}</div>
                   <div>dead_letter={data.telemetry_health.dead_letter}</div>
                   <div>dlq_ratio={data.telemetry_health.dead_letter_ratio.toFixed(4)}</div>
@@ -101,36 +121,31 @@ export default function CommandPage() {
               {!data.detection_health ? (
                 <StateBox kind="empty" text="Detection health not reported by API." />
               ) : (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
+                <div className="mono">
                   <div>catalogue={data.detection_health.catalogue_rules}</div>
                   <div>revisions={data.detection_health.revisions}</div>
                   <div>findings={data.detection_health.findings}</div>
                   <div>open_alerts={data.detection_health.open_alerts}</div>
-                  <div>
-                    statuses=
-                    {Object.entries(data.detection_health.by_status)
-                      .map(([k, v]) => `${k}:${v}`)
-                      .join(" ") || "none"}
-                  </div>
                 </div>
               )}
             </Panel>
-          </div>
+          </Grid>
+
           <Panel title="ATT&CK OVERVIEW">
             {!data.attack_overview || data.attack_overview.techniques_observed === 0 ? (
               <StateBox kind="empty" text="No ATT&CK techniques observed on findings or incidents yet." />
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table className="btos-table">
                 <thead>
-                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                  <tr>
                     <th>Technique</th>
                     <th>Count</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.attack_overview.top_techniques.map((row) => (
-                    <tr key={row.technique} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{row.technique}</td>
+                    <tr key={row.technique}>
+                      <td className="mono">{row.technique}</td>
                       <td>{row.count}</td>
                     </tr>
                   ))}
@@ -138,37 +153,14 @@ export default function CommandPage() {
               </table>
             )}
           </Panel>
-          <Panel title="AUTOMATION QUEUE">
-            {!data.automation_queue || data.automation_queue.length === 0 ? (
-              <StateBox kind="empty" text="No open IR work items in the response queue." />
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
-                    <th>Queue</th>
-                    <th>Status</th>
-                    <th>Title</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.automation_queue.map((item) => (
-                    <tr key={item.id} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td>{item.queue}</td>
-                      <td>{item.status}</td>
-                      <td>{item.title}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </Panel>
+
           <Panel title="TOP INCIDENTS">
             {!data.top_incidents || data.top_incidents.length === 0 ? (
-              <StateBox kind="empty" text="No open incidents. Convert an alert or rebuild correlation groups." />
+              <StateBox kind="empty" text="No open incidents." />
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table className="btos-table">
                 <thead>
-                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                  <tr>
                     <th>Severity</th>
                     <th>Status</th>
                     <th>Title</th>
@@ -177,50 +169,27 @@ export default function CommandPage() {
                 </thead>
                 <tbody>
                   {data.top_incidents.map((item) => (
-                    <tr key={item.id} style={{ borderTop: "1px solid var(--border)" }}>
+                    <tr key={item.id}>
                       <td>
                         <Severity value={item.severity} />
                       </td>
                       <td>{item.status}</td>
                       <td>{item.title}</td>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{item.updated_at}</td>
+                      <td className="mono">{item.updated_at}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
           </Panel>
-          <Panel title="TOP-RISK ENTITIES">
-            {!data.top_risk_entities || data.top_risk_entities.length === 0 ? (
-              <StateBox kind="empty" text="No scored entities. Ingest detections so risk can be computed from findings." />
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
-                    <th>Type</th>
-                    <th>Entity</th>
-                    <th>Risk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.top_risk_entities.map((entity) => (
-                    <tr key={entity.id} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td>{entity.entity_type}</td>
-                      <td>{entity.display_name}</td>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{entity.risk_score}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </Panel>
+
           <Panel title="TOP ALERTS">
             {data.top_alerts.length === 0 ? (
-              <StateBox kind="empty" text="No alerts. Ingest Blue Range or live telemetry to populate this panel." />
+              <StateBox kind="empty" text="No alerts." />
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table className="btos-table">
                 <thead>
-                  <tr style={{ color: "var(--muted)", textAlign: "left" }}>
+                  <tr>
                     <th>Severity</th>
                     <th>Title</th>
                     <th>Created</th>
@@ -228,12 +197,12 @@ export default function CommandPage() {
                 </thead>
                 <tbody>
                   {data.top_alerts.map((alert) => (
-                    <tr key={alert.id} style={{ borderTop: "1px solid var(--border)" }}>
+                    <tr key={alert.id}>
                       <td>
                         <Severity value={alert.severity} />
                       </td>
                       <td>{alert.title}</td>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{alert.created_at}</td>
+                      <td className="mono">{alert.created_at}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -243,14 +212,5 @@ export default function CommandPage() {
         </>
       ) : null}
     </AppShell>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <Panel>
-      <div style={{ color: "var(--muted)", fontSize: 12 }}>{label}</div>
-      <div style={{ fontSize: 28, fontFamily: "var(--font-mono)" }}>{value}</div>
-    </Panel>
   );
 }

@@ -67,5 +67,8 @@ infra/docker/volumes/
 security-languages/go/**/collectors.test
 security-languages/go/**/*.exe
 
+# Storybook
+apps/web/storybook-static/
+
 .vercel
 .env*

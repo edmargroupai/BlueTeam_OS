@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AppShell, Panel, Severity, StateBox } from "@/components/AppShell";
+import { AppShell, Panel, StateBox } from "@/components/AppShell";
+import { AttackHeatmap } from "@/components/charts/AttackHeatmap";
+import { Grid, MetricTile } from "@/components/ui/Primitives";
 import { ApiError, api } from "@/lib/api";
 
 type Technique = {
@@ -36,38 +38,23 @@ export default function AttackPage() {
   return (
     <AppShell
       title="ATT&CK Coverage"
-      description="Technique coverage from registered detections, observed telemetry, validation state, and findings. Gaps are scored — not invented."
+      description="Heatmap and table from registered detections, telemetry, validation, and findings. Gaps are scored — not invented."
     >
       {error ? <StateBox kind="error" text={error} /> : null}
       {!data ? <StateBox kind="loading" text="Computing coverage…" /> : null}
       {data ? (
-        <Panel title="SUMMARY">
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
-            techniques={data.summary.technique_count} covered={data.summary.covered} gaps={data.summary.gaps}{" "}
-            mean={data.summary.mean_coverage}
-          </div>
-        </Panel>
+        <>
+          <Grid cols={4}>
+            <MetricTile label="Techniques" value={data.summary.technique_count} />
+            <MetricTile label="Covered" value={data.summary.covered} />
+            <MetricTile label="Gaps" value={data.summary.gaps} />
+            <MetricTile label="Mean coverage" value={data.summary.mean_coverage} />
+          </Grid>
+          <Panel title="COVERAGE HEATMAP">
+            <AttackHeatmap techniques={data.techniques} />
+          </Panel>
+        </>
       ) : null}
-      {data?.techniques.map((tech) => (
-        <Panel key={tech.technique_id} title={`${tech.technique_id} · ${tech.name}`}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
-            <Severity value={tech.gap_severity} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
-              score {tech.coverage_score} · validated {String(tech.validated)} · findings {tech.finding_count}
-            </span>
-          </div>
-          <div style={{ color: "var(--muted)", fontSize: 13 }}>{tech.tactic}</div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, marginTop: 6 }}>
-            detections: {tech.detections.join(", ") || "none"}
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
-            telemetry: {tech.telemetry_sources.join(", ") || "none"}
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>
-            gaps: {tech.gaps.join(", ") || "none"}
-          </div>
-        </Panel>
-      ))}
     </AppShell>
   );
 }

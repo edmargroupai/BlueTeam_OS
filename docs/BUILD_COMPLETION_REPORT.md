@@ -85,13 +85,13 @@ Legend: **DONE** = acceptance met with tests/evidence · **PARTIAL** = real code
 | 31 | Evidence provenance | PARTIAL | Custody append API + sealed hashes; object URI still often null |
 | 32 | Deep DFIR workbench | PARTIAL | `/dfir` UI + APIs; Velociraptor/Volatility = contracts |
 | 33 | Packet / session investigation | PARTIAL | Existing sessions + network UI; PCAP refs not full store |
-| 34 | Defensive architecture center | PARTIAL | Typed graph seed/version/gaps API + UI (no React Flow editor yet) |
+| 34 | Defensive architecture center | PARTIAL | Typed graph + React Flow UI + gaps table |
 | 35 | Blue Range harness | PARTIAL | Extra persistence + lateral families; runner/CI already existed |
 | 36 | Quality scoring | DONE | New checks for replay/improve/AI/architecture/obs/DFIR |
-| 37 | Premium visual foundation | PARTIAL | `tokens.css` generated; Storybook/ECharts deferred |
-| 38 | Golden reference screens | PARTIAL | New Improve/DFIR/Architecture/Readiness pages |
-| 39 | Automated visual quality gate | GAP | Playwright/axe not added (frontend lint/build only) |
-| 40 | High-density graphics | GAP | No ECharts/Cytoscape/React Flow yet |
+| 37 | Premium visual foundation | PARTIAL | Tokens + CSS/TS artefacts + Storybook build in CI; Pixi/Rive deferred |
+| 38 | Golden reference screens | PARTIAL | Command/Attack/Graph/Playbooks/Architecture upgraded; remaining screens table-first |
+| 39 | Automated visual quality gate | PARTIAL | Storybook CI artefact; Playwright/axe/Lighthouse golden diffs still GAP |
+| 40 | High-density graphics | PARTIAL | ECharts + Cytoscape + React Flow wired with table fallbacks; Pixi deferred |
 | 41 | Final GSE-calibre gate | PARTIAL | Gate endpoint + quality machinery; **925 band not evidenced** |
 
 ---
@@ -102,7 +102,7 @@ Legend: **DONE** = acceptance met with tests/evidence · **PARTIAL** = real code
 2. **Replay promotion gate** — rules not covered by any passing job remain blocked (by design).
 3. **Cloud** — fixture Azure only; no live Graph/AWS/GCP.
 4. **AI** — offline deterministic path only; never claim model-produced SOC conclusions.
-5. **Visual phases 39–40** — intentionally deferred; do not market “premium graphics” as complete.
+5. **Visual phases 37–40** — charts/Storybook landed as PARTIAL; Playwright golden diffs + Pixi/Rive still incomplete.
 6. **Production (29–30/41)** — backup drill + readiness checklist exist; HA/WAF/load/recovery evidence incomplete.
 
 ---
@@ -136,7 +136,7 @@ Legend: **DONE** = acceptance met with tests/evidence · **PARTIAL** = real code
 2. Rotate any DB passwords previously exposed in chat.
 3. Run full `pytest` + frontend build in CI on `main`.
 4. Only after load/recovery/security scans: revisit Phase 41 GSE claim with real quality snapshot evidence.
-5. Optional product pass: Playwright smoke (39) + ATT&CK heatmap (40).
+5. Continue UI pack: Playwright route smoke + golden screenshots (Phase 39); polish remaining golden screens (38).
 
 ---
 
