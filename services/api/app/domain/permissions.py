@@ -24,6 +24,8 @@ PERMISSIONS: dict[str, str] = {
     "quality:read": "Read quality index",
     "blue_range:execute": "Execute Blue Range scenarios",
     "hunts:execute": "Execute BlueQL and registered SQL hunts",
+    "intel:read": "Read threat intelligence indicators",
+    "intel:write": "Create or deactivate threat intelligence indicators",
     "languages:read": "Read polyglot language catalogue and policy",
     "broker:execute": "Submit registered broker actions",
     "response:tier0": "Execute Tier-0 actions",
@@ -46,9 +48,10 @@ ANALYST_PERMS = [
     "quality:read",
     "languages:read",
     "hunts:execute",
+    "intel:read",
 ]
 
-HUNTER_PERMS = [*ANALYST_PERMS, "events:ingest"]
+HUNTER_PERMS = [*ANALYST_PERMS, "events:ingest", "intel:write"]
 
 DETECTION_ENGINEER_PERMS = [
     *ANALYST_PERMS,
@@ -75,6 +78,7 @@ ADMIN_PERMS = [
     "users:write",
     "tenants:write",
     "roles:write",
+    "intel:write",
 ]
 
 

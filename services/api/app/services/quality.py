@@ -286,6 +286,7 @@ def build_checks(db: Session, tenant_id: str | None) -> list[QualityCheckResult]
     from blueteam_enrich.engine import enrich_event
     from blueteam_ingest.syslog import parse_syslog_line
     from blueteam_objects.store import open_store
+
     from detections.lint import lint_rules
 
     demo = "ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
@@ -363,9 +364,35 @@ def build_checks(db: Session, tenant_id: str | None) -> list[QualityCheckResult]
     )
 
     # Remaining domains stay at zero until evidence exists. Do not inflate.
+    ioc_active = 0
+    if tenant_id:
+        from blueteam_common.time import utcnow as _utcnow
+
+        from app.models.intel import IndicatorOfCompromise
+
+        now = _utcnow()
+        ioc_active = db.execute(
+            select(func.count())
+            .select_from(IndicatorOfCompromise)
+            .where(
+                IndicatorOfCompromise.tenant_id == tenant_id,
+                IndicatorOfCompromise.active.is_(True),
+                IndicatorOfCompromise.expires_at > now,
+            )
+        ).scalar_one()
+    checks.append(
+        _check(
+            "intel.ioc_store",
+            "threat_intelligence",
+            "Active IOC store with TTL and provenance",
+            20,
+            ioc_active > 0,
+            [f"iocs:{ioc_active}"] if ioc_active else [],
+            f"{ioc_active} active IOCs." if ioc_active else "No active tenant IOCs evidenced.",
+        )
+    )
     for domain, title, points in [
         ("cloud_security", "Cloud connector not yet evidenced", 0),
-        ("threat_intelligence", "Live intel feed not yet evidenced", 0),
     ]:
         checks.append(
             _check(

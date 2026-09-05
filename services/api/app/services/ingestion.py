@@ -3,6 +3,7 @@ from __future__ import annotations
 from blueteam_common.hashing import canonical_json, sha256_hex
 from blueteam_common.ids import new_id
 from blueteam_common.time import utcnow
+from blueteam_ingest.router import normalize_payload
 from blueteam_schemas.events import CanonicalEvent
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -10,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.models.telemetry import DeadLetterEvent, SecurityEvent
 from app.services.detection import evaluate_and_store
-from blueteam_ingest.router import normalize_payload
 
 
 def ingest_payloads(
@@ -28,9 +28,13 @@ def ingest_payloads(
     for payload in payloads:
         try:
             event = normalize_payload(payload, tenant_id)
-            from blueteam_enrich.engine import enrich_event
+            from blueteam_enrich.engine import DEFAULT_INTEL, enrich_event
 
-            event, _enrichment = enrich_event(event)
+            from app.services.intel import active_intel_map, record_sightings
+
+            tenant_intel = active_intel_map(db, tenant_id)
+            event, _enrichment = enrich_event(event, intel={**DEFAULT_INTEL, **tenant_intel})
+            record_sightings(db, tenant_id, event)
         except (ValidationError, ValueError) as exc:
             _dead_letter(db, tenant_id, payload, str(exc))
             rejected.append({"reason": str(exc)})

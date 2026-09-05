@@ -28,6 +28,7 @@ const NAV = [
       { href: "/incidents", label: "Incidents" },
       { href: "/graph", label: "Entity Graph" },
       { href: "/hunt", label: "Threat Hunt" },
+      { href: "/intel", label: "Threat Intel" },
       { href: "/audit", label: "Audit" },
     ],
   },
