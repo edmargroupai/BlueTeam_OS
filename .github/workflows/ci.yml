@@ -17,6 +17,8 @@ jobs:
         run: pip install -e ".[dev]"
       - name: Ruff
         run: ruff check packages services/api tests detections
+      - name: Detection rule lint
+        run: python -m detections.lint
       - name: Unit, isolation, detection, Blue Range, polyglot
         run: pytest -q --cov --cov-report=term-missing
 

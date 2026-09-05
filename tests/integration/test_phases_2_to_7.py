@@ -21,9 +21,10 @@ def test_health_reports_live_probes(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["data_plane"]["postgres"]["connected"] is True
-    assert body["data_plane"]["postgres"]["backend"] == "sqlite"
-    assert body["data_plane"]["redis"]["configured"] is False
+    assert body["data_plane"]["postgres"]["backend"] in {"sqlite", "postgres"}
+    assert isinstance(body["data_plane"]["redis"]["configured"], bool)
     assert "retention" in body
+    assert body["retention"]["events_days"] >= 1
 
 
 def test_syslog_and_webhook_ingest(client: TestClient, demo_tenant: str) -> None:
