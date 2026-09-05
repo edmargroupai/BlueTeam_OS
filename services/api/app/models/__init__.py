@@ -6,6 +6,7 @@ from app.models.intel import IndicatorOfCompromise, SavedHunt
 from app.models.ops import DetectionException, IncidentRecord, RuleRevision, StorylineRecord, Suppression
 from app.models.quality import QualitySnapshot
 from app.models.telemetry import Alert, DeadLetterEvent, Evidence, FindingRecord, SecurityEvent
+from app.models.vuln import VulnerabilityRecord
 
 __all__ = [
     "Alert",
@@ -29,4 +30,5 @@ __all__ = [
     "Suppression",
     "Tenant",
     "User",
+    "VulnerabilityRecord",
 ]

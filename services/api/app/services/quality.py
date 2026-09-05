@@ -458,20 +458,88 @@ def build_checks(db: Session, tenant_id: str | None) -> list[QualityCheckResult]
             f"{ioc_active} active IOCs." if ioc_active else "No active tenant IOCs evidenced.",
         )
     )
-    for domain, title, points in [
-        ("cloud_security", "Cloud connector not yet evidenced", 0),
-    ]:
-        checks.append(
-            _check(
-                f"{domain}.pending",
-                domain,
-                title,
-                points,
-                False,
-                [],
-                "No evidence-backed implementation in this slice.",
-            )
+
+    from blueteam_cloud import get_cloud_connector
+    from blueteam_playbook import PlaybookEngine, get_playbook
+    from blueteam_telemetry import evaluate_telemetry_health
+    from blueteam_vuln import remediation_priority
+
+    cloud = get_cloud_connector("azure_ad")
+    sample_audit = cloud.normalize_audit(
+        {
+            "id": "evt_cloudquality000000000000000001",
+            "activityDisplayName": "Add member to role",
+            "activityDateTime": "2026-09-05T12:00:00Z",
+            "initiatedBy": {"user": {"userPrincipalName": "alice"}},
+            "ipAddress": "203.0.113.10",
+            "privileged": True,
+            "targetResources": [{"displayName": "Global Administrator", "id": "role-ga"}],
+        },
+        demo,
+    )
+    inventory = cloud.inventory([sample_audit])
+    checks.append(
+        _check(
+            "cloud.azure_fixture",
+            "cloud_security",
+            "Azure AD fixture connector audit + inventory",
+            20,
+            sample_audit.source == "azure-ad"
+            and sample_audit.source_type == "cloud"
+            and bool(inventory.risky_configs),
+            [sample_audit.id, inventory.risky_configs[0]["id"]],
+            "First-cloud adapter must normalise audit events and expose risky configs.",
         )
+    )
+
+    priority = remediation_priority(cvss=9.8, exploitability=80, asset_criticality=90, threat_activity=70)
+    checks.append(
+        _check(
+            "vuln.priority_formula",
+            "defensive_architecture",
+            "Deterministic vulnerability remediation priority",
+            15,
+            priority["priority"] >= 80 and priority["sla_days"] == 7 and "formula" in priority,
+            [str(priority["priority"])],
+            priority["formula"],
+        )
+    )
+
+    health = evaluate_telemetry_health(events=[], dead_letter_count=1, dead_letter_reasons=["schema drift"])
+    checks.append(
+        _check(
+            "telemetry.health_center",
+            "continuous_monitoring",
+            "Telemetry health warns on missing sources",
+            15,
+            health["status"] != "healthy" and any(w["kind"] == "silent_sensor" for w in health["warnings"]),
+            [w["kind"] for w in health["warnings"][:3]],
+            "Platform must warn when required telemetry is absent.",
+        )
+    )
+
+    engine = PlaybookEngine()
+    dry = engine.run(get_playbook("pb.enrich_only"), tenant_id=demo, dry_run=True, idempotency_key="qi-enrich")
+    gated = engine.run(
+        get_playbook("pb.contain_host_t0"),
+        tenant_id=demo,
+        dry_run=False,
+        idempotency_key="qi-contain",
+    )
+    checks.append(
+        _check(
+            "soar.playbook_dag",
+            "response_automation",
+            "Playbook DAG with retries/approvals/rollback hooks",
+            20,
+            dry.status == "completed"
+            and gated.status == "awaiting_approval"
+            and any(step.rollback_hook for step in gated.steps),
+            [dry.run_id, gated.run_id],
+            "T0 DAG completes dry-run; T2 isolate requires approval with rollback hook.",
+        )
+    )
+
     return checks
 
 

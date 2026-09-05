@@ -113,3 +113,89 @@ def test_benign_admin_success_does_not_fire() -> None:
         )
     ]
     assert _run(events) == []
+
+
+@pytest.mark.detection
+def test_repeated_failures() -> None:
+    events = [_event(suffix=f"{idx:032x}", minutes=0, user="carol", src_ip="10.0.0.9") for idx in range(5)]
+    assert "identity.repeated_failures" in _run(events)
+
+
+@pytest.mark.detection
+def test_unusual_success_after_failures() -> None:
+    events = [
+        *[_event(suffix=f"{idx:032x}", minutes=0, user="dave", src_ip="10.0.0.11") for idx in range(3)],
+        _event(suffix="ee", minutes=1, user="dave", src_ip="10.0.0.11", outcome="success"),
+    ]
+    assert "identity.unusual_success" in _run(events)
+
+
+@pytest.mark.detection
+def test_impossible_travel_geo_abstraction() -> None:
+    events = [
+        _event(
+            suffix="f1",
+            minutes=0,
+            user="alice",
+            src_ip="203.0.113.10",
+            outcome="success",
+            attributes={"geoip": {"country": "JP"}},
+        ),
+        _event(
+            suffix="f2",
+            minutes=30,
+            user="alice",
+            src_ip="198.51.100.88",
+            outcome="success",
+            attributes={"geoip": {"country": "BR"}},
+        ),
+    ]
+    assert "identity.impossible_travel" in _run(events)
+
+
+@pytest.mark.detection
+def test_mfa_fatigue() -> None:
+    events = [
+        _event(
+            suffix=f"{idx:032x}",
+            minutes=0,
+            user="bob",
+            src_ip="10.0.0.12",
+            outcome="failure",
+            event_type="mfa_challenge",
+            action="mfa_challenge",
+            attributes={"mfa": True},
+        )
+        for idx in range(5)
+    ]
+    assert "identity.mfa_fatigue" in _run(events)
+
+
+@pytest.mark.detection
+def test_dormant_account_activity() -> None:
+    events = [
+        _event(
+            suffix="d1",
+            minutes=0,
+            user="dormant-admin",
+            src_ip="10.0.0.13",
+            outcome="success",
+            attributes={"directory": {"dormant": "true", "last_login_days": "180"}},
+        )
+    ]
+    assert "identity.dormant_account" in _run(events)
+
+
+@pytest.mark.detection
+def test_service_account_misuse() -> None:
+    events = [
+        _event(
+            suffix="a1",
+            minutes=0,
+            user="svc-backup",
+            src_ip="10.0.0.14",
+            outcome="success",
+            attributes={"directory": {"type": "service"}, "logon_type": "interactive"},
+        )
+    ]
+    assert "identity.service_account_misuse" in _run(events)

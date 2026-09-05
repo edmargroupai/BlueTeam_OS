@@ -22,6 +22,8 @@ const NAV = [
       { href: "/network", label: "Network Investigation" },
       { href: "/endpoint", label: "Endpoint Investigation" },
       { href: "/connectors", label: "Connectors" },
+      { href: "/vulns", label: "Vulnerabilities" },
+      { href: "/telemetry", label: "Telemetry Health" },
     ],
   },
   {
@@ -38,6 +40,7 @@ const NAV = [
     label: "Engineering",
     items: [
       { href: "/blue-range", label: "Blue Range" },
+      { href: "/playbooks", label: "Playbooks" },
       { href: "/quality", label: "Quality Index" },
       { href: "/languages", label: "Language Layer" },
     ],

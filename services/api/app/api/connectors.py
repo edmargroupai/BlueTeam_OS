@@ -46,6 +46,7 @@ def list_connectors(_: TenantActor = Depends(Permission("events:read"))) -> dict
             {"connector_id": "wazuh", "name": "Wazuh", "kind": "endpoint"},
             {"connector_id": "zeek", "name": "Zeek", "kind": "network"},
             {"connector_id": "suricata", "name": "Suricata", "kind": "network"},
+            {"connector_id": "azure_ad", "name": "Azure AD (fixture)", "kind": "cloud"},
         ]
     }
 
@@ -244,3 +245,48 @@ def network_endpoint_correlate(
         "count": len(cross) + len(ip_joins),
         "note": "Cross-source requires endpoint + network evidence (storyline and/or shared IP).",
     }
+
+
+class CloudIngestBody(BaseModel):
+    events: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@router.post("/cloud/azure/ingest")
+def azure_ingest(
+    body: CloudIngestBody,
+    actor: TenantActor = Depends(Permission("events:ingest")),
+    db: Session = Depends(get_db),
+    request_id: str = Depends(get_request_id),
+) -> dict:
+    from blueteam_cloud import get_cloud_connector
+
+    connector = get_cloud_connector("azure_ad")
+    payloads = []
+    for raw in body.events:
+        event = connector.normalize_audit(raw, actor.tenant_id)
+        payloads.append({**event.model_dump(mode="json")})
+    result = ingest_payloads(db, actor.tenant_id, payloads, actor_id=actor.user_id)
+    write_audit(
+        db,
+        tenant_id=actor.tenant_id,
+        actor_type="user",
+        actor_id=actor.user_id,
+        request_id=request_id,
+        action="connector.azure_ad.ingest",
+        target_type="connector",
+        target_id="azure_ad",
+        after_state={"accepted": len(result["accepted"])},
+    )
+    return result
+
+
+@router.get("/cloud/azure/inventory")
+def azure_inventory(
+    actor: TenantActor = Depends(Permission("events:read")),
+    db: Session = Depends(get_db),
+) -> dict:
+    from blueteam_cloud import get_cloud_connector
+
+    connector = get_cloud_connector("azure_ad")
+    events = [item for item in load_window(db, actor.tenant_id) if item.source == "azure-ad"]
+    return connector.inventory(events).as_dict()

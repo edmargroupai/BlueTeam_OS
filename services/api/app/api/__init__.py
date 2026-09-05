@@ -19,8 +19,11 @@ from app.api import (
     intel,
     investigate,
     languages,
+    playbooks,
     quality,
+    telemetry,
     tenants,
+    vulns,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -40,6 +43,9 @@ api_router.include_router(hunts.router)
 api_router.include_router(intel.router)
 api_router.include_router(attack.router)
 api_router.include_router(connectors.router)
+api_router.include_router(vulns.router)
+api_router.include_router(telemetry.router)
+api_router.include_router(playbooks.router)
 api_router.include_router(broker.router)
 api_router.include_router(investigate.router)
 api_router.include_router(graph.router)

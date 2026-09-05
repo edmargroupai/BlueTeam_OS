@@ -21,6 +21,8 @@ GEOIP_FIXTURES: dict[str, dict[str, str]] = {
     "1.1.1.1": {"country": "AU", "asn": "AS13335", "org": "Cloudflare"},
     "203.0.113.77": {"country": "ZZ", "asn": "AS64500", "org": "TEST-NET-3"},
     "198.51.100.10": {"country": "ZZ", "asn": "AS64500", "org": "TEST-NET-2"},
+    "203.0.113.10": {"country": "JP", "asn": "AS64501", "org": "TEST-NET-JP"},
+    "198.51.100.88": {"country": "BR", "asn": "AS64502", "org": "TEST-NET-BR"},
 }
 
 DEFAULT_ASSETS: dict[str, dict[str, str]] = {
@@ -32,6 +34,13 @@ DEFAULT_DIRECTORY: dict[str, dict[str, str]] = {
     "alice": {"id": "usr_alice", "department": "finance", "type": "human"},
     "bob": {"id": "usr_bob", "department": "engineering", "type": "human"},
     "svc-backup": {"id": "usr_svc_backup", "department": "platform", "type": "service"},
+    "dormant-admin": {
+        "id": "usr_dormant_admin",
+        "department": "it",
+        "type": "human",
+        "dormant": "true",
+        "last_login_days": "180",
+    },
 }
 
 DEFAULT_INTEL: dict[str, dict[str, str]] = {
@@ -96,6 +105,7 @@ def enrich_event(
         result.identity = dict(directory[user_name])
         result.applied.append("identity")
         event.attributes["identity_enrichment"] = result.identity
+        event.attributes["directory"] = result.identity
         event.identity = CanonicalIdentity(
             id=result.identity.get("id"),
             type=result.identity.get("type"),

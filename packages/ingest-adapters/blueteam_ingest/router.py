@@ -8,6 +8,10 @@ from blueteam_schemas.events import CanonicalEvent
 
 
 def normalize_payload(payload: dict[str, Any], tenant_id: str) -> CanonicalEvent:
+    if payload.get("schema_version") and payload.get("id") and payload.get("source") and payload.get("source_type"):
+        stamped = dict(payload)
+        stamped["tenant_id"] = tenant_id
+        return CanonicalEvent.model_validate(stamped)
     adapter = str(payload.get("adapter") or "").lower()
     if payload.get("syslog_raw") or adapter == "syslog":
         from blueteam_ingest.syslog import parse_syslog_line
