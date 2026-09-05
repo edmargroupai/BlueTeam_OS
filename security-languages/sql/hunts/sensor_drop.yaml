@@ -1,0 +1,23 @@
+id: sql.telemetry.sensor_drop
+name: Sensor drop hunt
+description: Sources with zero or collapsing volume versus other sources in the same window.
+security_domain: continuous_monitoring
+required_fields: [source]
+MITRE_mapping: []
+performance_expectation: aggregation only
+version: 1.0.0
+parameters: [min_healthy]
+defaults:
+  min_healthy: 1
+test_fixture: null
+sql: |
+  SELECT source, COUNT(*) AS event_count
+  FROM events
+  GROUP BY source
+  HAVING COUNT(*) <= :min_healthy
+clickhouse_sql: |
+  SELECT source, count() AS event_count
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String}
+  GROUP BY source
+  HAVING event_count <= {min_healthy:UInt32}

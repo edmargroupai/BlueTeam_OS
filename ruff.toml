@@ -1,0 +1,11 @@
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101"]
+"services/api/app/main.py" = ["E402"]
+"security-languages/**" = ["S"]

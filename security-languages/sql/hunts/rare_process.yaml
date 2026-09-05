@@ -1,0 +1,23 @@
+id: sql.endpoint.rare_process
+name: Rare process hunt
+description: Process names observed once in the window — candidate for unusual execution.
+security_domain: endpoint
+required_fields: [process_name, category]
+MITRE_mapping: [T1204]
+performance_expectation: p95 under 2s on 100k process events
+version: 1.0.0
+parameters: []
+defaults: {}
+test_fixture: null
+sql: |
+  SELECT process_name, COUNT(*) AS executions
+  FROM events
+  WHERE category = 'process' AND process_name IS NOT NULL
+  GROUP BY process_name
+  HAVING COUNT(*) = 1
+clickhouse_sql: |
+  SELECT process_name, count() AS executions
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String} AND category = 'process' AND process_name != ''
+  GROUP BY process_name
+  HAVING executions = 1

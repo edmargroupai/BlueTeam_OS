@@ -1,0 +1,24 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md ./
+COPY packages ./packages
+COPY services ./services
+COPY detections ./detections
+COPY blue_range ./blue_range
+COPY migrations ./migrations
+
+RUN pip install --no-cache-dir -e ".[dev]"
+
+ENV PYTHONPATH=/app/packages/schemas:/app/packages/python-common:/app/packages/detection-sdk:/app/packages/playbook-sdk:/app/packages/quality-engine:/app/packages/blue-range:/app/services/api:/app/detections
+ENV BTOS_API_HOST=0.0.0.0
+ENV BTOS_API_PORT=8080
+
+EXPOSE 8080
+
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "services/api"]

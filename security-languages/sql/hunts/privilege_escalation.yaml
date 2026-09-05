@@ -1,0 +1,23 @@
+id: sql.identity.privilege_escalation
+name: Privilege escalation hunt
+description: Privilege or role grants recorded in identity telemetry.
+security_domain: identity
+required_fields: [action, category]
+MITRE_mapping: [T1098]
+performance_expectation: p95 under 2s
+version: 1.0.0
+parameters: []
+defaults: {}
+test_fixture: blue_range/scenarios/identity/privilege_grant.yaml
+sql: |
+  SELECT user_name, action, COUNT(*) AS grants
+  FROM events
+  WHERE category IN ('identity', 'authentication') AND action LIKE '%grant%'
+  GROUP BY user_name, action
+clickhouse_sql: |
+  SELECT user_id AS user_name, action, count() AS grants
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String}
+    AND category IN ('identity', 'authentication')
+    AND positionCaseInsensitive(action, 'grant') > 0
+  GROUP BY user_id, action

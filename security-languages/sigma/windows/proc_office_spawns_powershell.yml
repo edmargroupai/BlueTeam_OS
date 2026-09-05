@@ -1,0 +1,26 @@
+title: Office application spawned PowerShell
+id: office-spawns-powershell
+status: test
+description: >
+  Word or Excel launching powershell.exe is a common initial-access tradecraft
+  path (T1059.001). Compiled only after fixture validation.
+author: blueteam-os
+level: high
+tags:
+  - attack.t1059.001
+  - attack.execution
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    process.name:
+      - powershell.exe
+      - pwsh.exe
+    parent.name:
+      - winword.exe
+      - excel.exe
+      - outlook.exe
+  condition: selection
+falsepositives:
+  - Rare legitimate admin macros. Measure in replay before production.

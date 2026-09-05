@@ -1,0 +1,21 @@
+id: sql.network.lateral_movement
+name: Lateral movement hunt
+description: East-west administrative protocols (SMB/RDP/WinRM) between internal hosts.
+security_domain: network
+required_fields: [src_ip, dst_ip, dst_port]
+MITRE_mapping: [T1021]
+performance_expectation: p95 under 2s
+version: 1.0.0
+parameters: []
+defaults: {}
+test_fixture: null
+sql: |
+  SELECT src_ip, dst_ip, dst_port, COUNT(*) AS hops
+  FROM events
+  WHERE category = 'network' AND dst_port IN (445, 3389, 5985, 5986)
+  GROUP BY src_ip, dst_ip, dst_port
+clickhouse_sql: |
+  SELECT src_ip, dst_ip, dst_port, count() AS hops
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String} AND category = 'network' AND dst_port IN (445, 3389, 5985, 5986)
+  GROUP BY src_ip, dst_ip, dst_port

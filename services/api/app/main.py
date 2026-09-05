@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+from app.bootstrap import ensure_paths
+
+ensure_paths()
+
+from contextlib import asynccontextmanager
+
+from blueteam_common.errors import BlueTeamError
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+import app.models  # noqa: F401
+from app.api import api_router
+from app.core.config import get_settings
+from app.core.db import get_engine, get_session_factory
+from app.core.errors import blueteam_error_handler, http_error_handler, unhandled_error_handler
+from app.core.logging import configure_logging
+from app.core.middleware import RequestContextMiddleware
+from app.models.base import Base
+from app.services.seed import seed_if_empty
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+    configure_logging(settings.log_level)
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        Base.metadata.create_all(bind=get_engine())
+        session = get_session_factory()()
+        try:
+            seed_if_empty(session)
+            from app.services.rules import sync_catalog_revisions
+
+            sync_catalog_revisions(session)
+            session.commit()
+        finally:
+            session.close()
+        yield
+
+    application = FastAPI(
+        title="Blue Team OS Center API",
+        version="0.1.0",
+        description="Control plane for Blue Team OS. Detection logic lives in Python engines, not the UI.",
+        lifespan=lifespan,
+    )
+    application.add_middleware(RequestContextMiddleware)
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[settings.web_origin, "http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_origin_regex=r"https://.*\.vercel\.app",
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type", "X-Tenant-ID", "X-API-Key", "X-Request-ID"],
+    )
+    application.add_exception_handler(BlueTeamError, blueteam_error_handler)
+    application.add_exception_handler(StarletteHTTPException, http_error_handler)
+    application.add_exception_handler(Exception, unhandled_error_handler)
+    application.include_router(api_router)
+    return application
+
+
+app = create_app()

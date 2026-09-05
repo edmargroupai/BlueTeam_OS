@@ -1,0 +1,3 @@
+<?php
+// Synthetic fixture. Not a live webshell. Used only for YARA true-positive tests.
+eval($_POST['x']);

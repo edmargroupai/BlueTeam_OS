@@ -1,0 +1,41 @@
+id: br-endpoint-office-powershell
+family: endpoint
+name: Office application spawned PowerShell
+description: >
+  Word launches powershell.exe. Expected compiled Sigma detection
+  sigma.office-spawns-powershell (T1059.001).
+attack_techniques:
+  - T1059.001
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 0
+expected_event_count: 1
+expected_mitre:
+  - T1059.001
+expected_detections:
+  - rule_id: sigma.office-spawns-powershell
+    min_count: 1
+    mitre_techniques:
+      - T1059.001
+  - rule_id: endpoint.office_spawns_shell
+    min_count: 1
+    mitre_techniques:
+      - T1059.001
+events:
+  - id: evt_ps000000000000000000000000000001
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T09:00:00Z"
+    ingested_at: "2026-09-05T09:00:01Z"
+    source: sysmon
+    source_type: endpoint
+    event_type: process_creation
+    category: process
+    action: create
+    outcome: success
+    process:
+      name: powershell.exe
+      command_line: "powershell.exe -nop -w hidden"
+    parent_process:
+      name: winword.exe
+    user:
+      name: jlee
+    raw_event: { Image: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueteam.os/contracts/evidence/ref/1.0.0",
+  "title": "EvidenceRef",
+  "type": "object",
+  "required": ["evidence_id", "tenant_id", "source_event_ids", "evidence_type", "provenance_level", "integrity_hash", "collector"],
+  "properties": {
+    "evidence_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "incident_id": { "type": ["string", "null"] },
+    "source_event_ids": { "type": "array", "items": { "type": "string" } },
+    "evidence_type": { "type": "string" },
+    "provenance_level": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "confidence": { "type": "number" },
+    "integrity_hash": { "type": "string" },
+    "collector": { "type": "string" },
+    "timestamp": { "type": "string" }
+  }
+}

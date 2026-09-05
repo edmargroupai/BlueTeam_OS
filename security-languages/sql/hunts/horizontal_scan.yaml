@@ -1,0 +1,24 @@
+id: sql.network.horizontal_scan
+name: Horizontal scan hunt
+description: One source contacting many distinct destinations on the same port.
+security_domain: network
+required_fields: [src_ip, dst_ip, dst_port]
+MITRE_mapping: [T1046]
+performance_expectation: p95 under 2s on 100k network events
+version: 1.0.0
+parameters: [min_destinations]
+defaults:
+  min_destinations: 8
+test_fixture: null
+sql: |
+  SELECT src_ip, dst_port, COUNT(DISTINCT dst_ip) AS destinations
+  FROM events
+  WHERE category = 'network' AND dst_ip IS NOT NULL
+  GROUP BY src_ip, dst_port
+  HAVING COUNT(DISTINCT dst_ip) >= :min_destinations
+clickhouse_sql: |
+  SELECT src_ip, dst_port, countDistinct(dst_ip) AS destinations
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String} AND category = 'network' AND dst_ip != ''
+  GROUP BY src_ip, dst_port
+  HAVING destinations >= {min_destinations:UInt32}

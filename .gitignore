@@ -1,0 +1,68 @@
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+!.env.example
+
+# Hosted project metadata
+.vercel
+supabase/.temp
+supabase/.branches
+supabase/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.tox/
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Data and local runtime
+data/
+*.db
+*.sqlite
+*.sqlite3
+.local/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Test artefacts
+test-results/
+playwright-report/
+coverage/
+.lighthouseci/
+
+# Docker volumes
+infra/docker/volumes/
+
+# Native toolchains
+**/target/
+security-languages/go/**/collectors.test
+security-languages/go/**/*.exe

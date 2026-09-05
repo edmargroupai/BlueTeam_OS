@@ -1,0 +1,34 @@
+id: br-identity-privilege-grant
+family: identity
+name: Privileged directory group grant
+description: >
+  A helpdesk account adds a user to Domain Admins. Expected detection is
+  identity.privilege_grant (T1098).
+attack_techniques:
+  - T1098
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 0
+expected_event_count: 1
+expected_mitre:
+  - T1098
+expected_detections:
+  - rule_id: identity.privilege_grant
+    min_count: 1
+    mitre_techniques:
+      - T1098
+events:
+  - id: evt_pg000000000000000000000000000001
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T08:15:00Z"
+    ingested_at: "2026-09-05T08:15:01Z"
+    source: windows-security
+    source_type: identity
+    event_type: group_change
+    category: directory
+    action: add_to_group
+    outcome: success
+    user: { name: helpdesk.jlee, id: u-jlee }
+    attributes:
+      group: Domain Admins
+      member: contractor.ext
+    raw_event: { event_id: 4728, group: "Domain Admins" }

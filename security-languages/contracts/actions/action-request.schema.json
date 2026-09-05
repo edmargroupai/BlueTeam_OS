@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueteam.os/contracts/actions/request/1.0.0",
+  "title": "ActionRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action_id", "action_type", "tenant_id", "requested_by", "reason"],
+  "properties": {
+    "action_id": { "type": "string" },
+    "action_type": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "target": { "type": "object" },
+    "params": { "type": "object" },
+    "reason": { "type": "string" },
+    "requested_by": { "type": "string" },
+    "dry_run": { "type": "boolean", "default": true }
+  }
+}

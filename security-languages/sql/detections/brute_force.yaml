@@ -1,0 +1,24 @@
+id: sql.identity.brute_force
+name: Brute-force hunt
+description: Repeated failures against one account.
+security_domain: identity
+required_fields: [user_name, outcome, category]
+MITRE_mapping: [T1110.001]
+performance_expectation: p95 under 2s on 100k auth events
+version: 1.0.0
+parameters: [min_failures]
+defaults:
+  min_failures: 8
+test_fixture: blue_range/scenarios/identity/brute_force.yaml
+sql: |
+  SELECT user_name, COUNT(*) AS failures
+  FROM events
+  WHERE category = 'authentication' AND outcome = 'failure'
+  GROUP BY user_name
+  HAVING COUNT(*) >= :min_failures
+clickhouse_sql: |
+  SELECT user_id AS user_name, count() AS failures
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String} AND category = 'authentication' AND outcome = 'failure'
+  GROUP BY user_id
+  HAVING failures >= {min_failures:UInt32}

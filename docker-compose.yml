@@ -1,0 +1,133 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: blueteam
+      POSTGRES_PASSWORD: ${BTOS_POSTGRES_PASSWORD:-dev_only_change_me}
+      POSTGRES_DB: blueteam
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueteam -d blueteam"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    environment:
+      CLICKHOUSE_DB: blueteam
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: dev_only_ch
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./infra/clickhouse/users.d/btos.xml:/etc/clickhouse-server/users.d/btos.xml:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  opensearch:
+    image: opensearchproject/opensearch:2.17.1
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - bootstrap.memory_lock=true
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200 >/dev/null"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.21
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --mode dev-container
+    ports:
+      - "19092:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${BTOS_S3_ACCESS_KEY:-dev_minio}
+      MINIO_ROOT_PASSWORD: ${BTOS_S3_SECRET_KEY:-dev_only_change_me_minio}
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      BTOS_ENV: development
+      BTOS_SECRET_KEY: ${BTOS_SECRET_KEY:-dev_only_compose_secret_change_me}
+      BTOS_DATABASE_URL: postgresql+psycopg://blueteam:${BTOS_POSTGRES_PASSWORD:-dev_only_change_me}@postgres:5432/blueteam
+      BTOS_REDIS_URL: redis://redis:6379/0
+      BTOS_DEV_SEED: "true"
+      BTOS_DEV_PASSWORD: ${BTOS_DEV_PASSWORD:-dev_only_change_me}
+      BTOS_WEB_ORIGIN: http://127.0.0.1:3000
+      BTOS_AI_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    environment:
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  opensearch_data:
+  minio_data:

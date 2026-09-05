@@ -1,0 +1,8 @@
+{
+  "id": "ebpf.process.exec",
+  "enabled_by": "BTOS_EBPF_ENABLED",
+  "mandatory": false,
+  "observes": ["execve", "execveat"],
+  "emits": "canonical-event/1.0.0",
+  "userspace": "security-languages/rust/endpoint-sensor"
+}

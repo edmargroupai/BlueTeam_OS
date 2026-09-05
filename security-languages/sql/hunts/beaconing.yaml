@@ -1,0 +1,24 @@
+id: sql.network.beaconing
+name: Beaconing hunt
+description: Repeated outbound connections from one host to one destination.
+security_domain: network
+required_fields: [src_ip, dst_ip, category]
+MITRE_mapping: [T1071]
+performance_expectation: p95 under 2s on 100k network events
+version: 1.0.0
+parameters: [min_repeats]
+defaults:
+  min_repeats: 4
+test_fixture: null
+sql: |
+  SELECT src_ip, dst_ip, COUNT(*) AS repeats
+  FROM events
+  WHERE category = 'network' AND dst_ip IS NOT NULL
+  GROUP BY src_ip, dst_ip
+  HAVING COUNT(*) >= :min_repeats
+clickhouse_sql: |
+  SELECT src_ip, dst_ip, count() AS repeats
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String} AND category = 'network' AND dst_ip != ''
+  GROUP BY src_ip, dst_ip
+  HAVING repeats >= {min_repeats:UInt32}

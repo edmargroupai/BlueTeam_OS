@@ -1,0 +1,105 @@
+id: br-endpoint-office-c2
+family: endpoint
+name: Office PowerShell then external beacon
+description: >
+  Word launches encoded PowerShell, then the same host beacons to an external IP.
+  Expected detections include Office-to-shell, encoded PowerShell, process-network
+  chain, and repetitive beacon.
+attack_techniques:
+  - T1059.001
+  - T1027
+  - T1071
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 0
+expected_event_count: 5
+expected_mitre:
+  - T1059.001
+  - T1071
+expected_detections:
+  - rule_id: sigma.office-spawns-powershell
+    min_count: 1
+  - rule_id: endpoint.office_spawns_shell
+    min_count: 1
+  - rule_id: endpoint.encoded_powershell
+    min_count: 1
+  - rule_id: endpoint.process_network_chain
+    min_count: 1
+  - rule_id: network.repetitive_beacon
+    min_count: 1
+events:
+  - id: evt_c2a00000000000000000000000000001
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T11:00:00Z"
+    ingested_at: "2026-09-05T11:00:01Z"
+    source: sysmon
+    source_type: endpoint
+    event_type: process_creation
+    category: process
+    action: create
+    outcome: success
+    process:
+      name: powershell.exe
+      command_line: "powershell.exe -nop -w hidden -enc SQBFAFgA"
+      path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    parent_process:
+      name: winword.exe
+    host: { name: ws-jlee, id: host-jlee }
+    user: { name: jlee }
+    src_ip: 10.20.0.15
+    raw_event: { Image: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" }
+  - id: evt_c2b00000000000000000000000000002
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T11:00:20Z"
+    ingested_at: "2026-09-05T11:00:21Z"
+    source: zeek.conn
+    source_type: zeek
+    event_type: conn
+    category: network
+    src_ip: 10.20.0.15
+    dst_ip: 198.51.100.88
+    dst_port: 443
+    protocol: tcp
+    host: { name: ws-jlee, id: host-jlee }
+    raw_event: { uid: Cbeacon1 }
+  - id: evt_c2c00000000000000000000000000003
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T11:01:20Z"
+    ingested_at: "2026-09-05T11:01:21Z"
+    source: zeek.conn
+    source_type: zeek
+    event_type: conn
+    category: network
+    src_ip: 10.20.0.15
+    dst_ip: 198.51.100.88
+    dst_port: 443
+    protocol: tcp
+    host: { name: ws-jlee, id: host-jlee }
+    raw_event: { uid: Cbeacon2 }
+  - id: evt_c2d00000000000000000000000000004
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T11:02:20Z"
+    ingested_at: "2026-09-05T11:02:21Z"
+    source: zeek.conn
+    source_type: zeek
+    event_type: conn
+    category: network
+    src_ip: 10.20.0.15
+    dst_ip: 198.51.100.88
+    dst_port: 443
+    protocol: tcp
+    host: { name: ws-jlee, id: host-jlee }
+    raw_event: { uid: Cbeacon3 }
+  - id: evt_c2e00000000000000000000000000005
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T11:03:20Z"
+    ingested_at: "2026-09-05T11:03:21Z"
+    source: zeek.conn
+    source_type: zeek
+    event_type: conn
+    category: network
+    src_ip: 10.20.0.15
+    dst_ip: 198.51.100.88
+    dst_port: 443
+    protocol: tcp
+    host: { name: ws-jlee, id: host-jlee }
+    raw_event: { uid: Cbeacon4 }

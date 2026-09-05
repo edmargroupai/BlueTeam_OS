@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueteam.os/contracts/events/canonical-event/1.0.0",
+  "title": "CanonicalEvent",
+  "type": "object",
+  "required": ["id", "tenant_id", "timestamp", "ingested_at", "source", "source_type", "event_type", "category", "schema_version"],
+  "additionalProperties": true,
+  "properties": {
+    "id": { "type": "string" },
+    "tenant_id": { "type": "string", "pattern": "^ten_" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "ingested_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string" },
+    "source_type": { "type": "string" },
+    "event_type": { "type": "string" },
+    "category": { "type": "string" },
+    "schema_version": { "type": "string", "const": "1.0.0" }
+  }
+}

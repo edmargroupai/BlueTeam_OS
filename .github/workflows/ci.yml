@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  python-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check packages services/api tests detections
+      - name: Unit, isolation, detection, Blue Range, polyglot
+        run: pytest -q --cov --cov-report=term-missing
+
+  blueql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q tests/polyglot/test_sigma_yara_sql_blueql.py tests/integration/test_polyglot_api.py
+
+  sigma:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q -k sigma
+
+  yara:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q -k yara
+
+  rego:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q -k rego
+
+  powershell-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q tests/polyglot/test_script_safety.py
+
+  shell-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck if present
+        run: |
+          if command -v shellcheck >/dev/null; then
+            shellcheck security-languages/shell/linux/*.sh security-languages/shell/forensics/*.sh
+          else
+            echo "SKIPPED_WITH_REASON: shellcheck not installed"
+          fi
+
+  rust-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cargo test or skip
+        run: |
+          if command -v cargo >/dev/null; then
+            cargo test --manifest-path security-languages/rust/event-model/Cargo.toml
+          else
+            echo "SKIPPED_WITH_REASON: cargo not installed"
+          fi
+
+  go-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Go test or skip
+        run: |
+          if command -v go >/dev/null; then
+            (cd security-languages/go/cloud-collectors && go test ./...)
+          else
+            echo "SKIPPED_WITH_REASON: go not installed"
+          fi
+
+  security-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contract files exist
+        run: |
+          test -f security-languages/contracts/versioning/CONTRACT_VERSION
+          test -f security-languages/contracts/events/canonical-event.schema.json
+          test -f security-languages/contracts/actions/action-request.schema.json
+
+  blue-range:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q -m blue_range
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q tests/integration tests/tenant-isolation tests/security

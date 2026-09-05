@@ -1,0 +1,20 @@
+id: sql.telemetry.volume
+name: Per-source event volume
+description: Count events by source category for health comparison.
+security_domain: continuous_monitoring
+required_fields: [category]
+MITRE_mapping: []
+performance_expectation: aggregation only
+version: 1.0.0
+parameters: []
+defaults: {}
+test_fixture: null
+sql: |
+  SELECT category, COUNT(*) AS event_count
+  FROM events
+  GROUP BY category
+clickhouse_sql: |
+  SELECT category, count() AS event_count
+  FROM blueteam.events
+  WHERE tenant_id = {tenant_id:String}
+  GROUP BY category

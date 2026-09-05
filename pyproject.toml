@@ -1,0 +1,175 @@
+[project]
+name = "blueteam-os"
+version = "0.1.0"
+description = "Blue Team OS Center — defensive cybersecurity operating system"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "Blue Team OS" }]
+dependencies = [
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.10.4",
+    "pydantic-settings>=2.7.1",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14.1",
+    "psycopg[binary]>=3.2.4",
+    "bcrypt>=4.2.1",
+    "pyjwt>=2.10.1",
+    "httpx>=0.28.1",
+    "python-multipart>=0.0.20",
+    "structlog>=24.4.0",
+    "orjson>=3.10.13",
+    "email-validator>=2.2.0",
+    "pyyaml>=6.0.2",
+    "kafka-python>=2.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.6",
+    "mypy>=1.14.1",
+    "types-pyyaml>=6.0.12",
+]
+
+[build-system]
+requires = ["setuptools>=75.6.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["blueteam_os"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = [
+    "packages/schemas",
+    "packages/python-common",
+    "packages/detection-sdk",
+    "packages/playbook-sdk",
+    "packages/quality-engine",
+    "packages/blue-range",
+    "packages/execution-broker",
+    "packages/sigma-compiler",
+    "packages/yara-engine",
+    "packages/blueql",
+    "packages/rego-engine",
+    "packages/sql-hunts",
+    "packages/event-fabric",
+    "packages/clickhouse-store",
+    "packages/network-adapters",
+    "packages/endpoint-adapters",
+    "packages/correlation",
+    "packages/entity-graph",
+    "packages/object-store",
+    "packages/enrichment",
+    "packages/ingest-adapters",
+    "packages/dataplane-clients",
+    "services/api",
+    "tests",
+    "detections",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "S"]
+ignore = ["S101", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+"services/api/app/services/seed.py" = ["S105", "S106"]
+"services/api/tests/**" = ["S105", "S106"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "packages/schemas",
+    "packages/python-common",
+    "packages/detection-sdk",
+    "packages/playbook-sdk",
+    "packages/quality-engine",
+    "packages/blue-range",
+    "packages/execution-broker",
+    "packages/sigma-compiler",
+    "packages/yara-engine",
+    "packages/blueql",
+    "packages/rego-engine",
+    "packages/sql-hunts",
+    "packages/event-fabric",
+    "packages/clickhouse-store",
+    "packages/network-adapters",
+    "packages/endpoint-adapters",
+    "packages/correlation",
+    "packages/entity-graph",
+    "packages/object-store",
+    "packages/enrichment",
+    "packages/ingest-adapters",
+    "packages/dataplane-clients",
+    "services/api",
+]
+testpaths = [
+    "tests",
+    "services/api/tests",
+    "packages/detection-sdk",
+    "packages/blue-range",
+    "packages/quality-engine",
+]
+addopts = "-q --strict-markers"
+markers = [
+    "tenant_isolation: cross-tenant access must fail",
+    "detection: detection-engine correctness",
+    "blue_range: Blue Range scenario execution",
+    "security: control-plane security invariants",
+    "polyglot: language-layer contracts and compilers",
+]
+
+[tool.coverage.run]
+source = [
+    "packages/schemas",
+    "packages/python-common",
+    "packages/detection-sdk",
+    "packages/playbook-sdk",
+    "packages/quality-engine",
+    "packages/blue-range",
+    "packages/execution-broker",
+    "packages/sigma-compiler",
+    "packages/yara-engine",
+    "packages/blueql",
+    "packages/rego-engine",
+    "packages/sql-hunts",
+    "packages/event-fabric",
+    "packages/clickhouse-store",
+    "packages/network-adapters",
+    "packages/endpoint-adapters",
+    "packages/correlation",
+    "packages/entity-graph",
+    "packages/object-store",
+    "packages/enrichment",
+    "packages/ingest-adapters",
+    "packages/dataplane-clients",
+    "services/api/app",
+]
+omit = ["*/tests/*"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+pretty = true
+packages = [
+    "blueteam_schemas",
+    "blueteam_common",
+    "blueteam_detection",
+    "blueteam_playbook",
+    "blueteam_quality",
+    "blueteam_range",
+]
+mypy_path = [
+    "packages/schemas",
+    "packages/python-common",
+    "packages/detection-sdk",
+    "packages/playbook-sdk",
+    "packages/quality-engine",
+    "packages/blue-range",
+    "services/api",
+]
+exclude = ["apps", "node_modules", ".venv"]

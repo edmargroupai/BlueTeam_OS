@@ -1,0 +1,123 @@
+id: br-identity-brute-force
+family: identity
+name: Single-account authentication brute force
+description: >
+  Eight failed logons against one account from changing source ports on the same host.
+  Expected detection is identity.brute_force (T1110.001).
+attack_techniques:
+  - T1110.001
+max_detection_latency_seconds: 5
+allowed_false_positive_envelope: 0
+expected_event_count: 8
+expected_mitre:
+  - T1110.001
+expected_detections:
+  - rule_id: identity.brute_force
+    min_count: 1
+    mitre_techniques:
+      - T1110.001
+events:
+  - id: evt_bf000000000000000000000000000001
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:01Z"
+    ingested_at: "2026-09-05T07:10:02Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000002
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:08Z"
+    ingested_at: "2026-09-05T07:10:09Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000003
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:15Z"
+    ingested_at: "2026-09-05T07:10:16Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000004
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:22Z"
+    ingested_at: "2026-09-05T07:10:23Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000005
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:29Z"
+    ingested_at: "2026-09-05T07:10:30Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000006
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:36Z"
+    ingested_at: "2026-09-05T07:10:37Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000007
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:43Z"
+    ingested_at: "2026-09-05T07:10:44Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
+  - id: evt_bf000000000000000000000000000008
+    tenant_id: ten_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    timestamp: "2026-09-05T07:10:50Z"
+    ingested_at: "2026-09-05T07:10:51Z"
+    source: windows-security
+    source_type: endpoint
+    event_type: login
+    category: authentication
+    src_ip: 10.4.1.20
+    action: login
+    outcome: failure
+    user: { name: svc-backup, id: u-svc-backup }
+    raw_event: { event_id: 4625 }
