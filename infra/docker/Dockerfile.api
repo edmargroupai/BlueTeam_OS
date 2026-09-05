@@ -18,9 +18,11 @@ RUN pip install --no-cache-dir -e .
 
 ENV BTOS_API_HOST=0.0.0.0
 ENV BTOS_API_PORT=8080
-ENV BTOS_OBJECT_STORE_ROOT=/data/objects
+ENV BTOS_OBJECT_STORE_ROOT=/tmp/objects
+# Railway injects PORT; default 8080 for local docker runs.
+ENV PORT=8080
 
 EXPOSE 8080
 
-# Bootstrap adds package paths at import time; migrate patches hosted Postgres columns.
-CMD ["sh", "-c", "python scripts/migrate.py && python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --app-dir services/api"]
+# Portable entrypoint: migrate control-plane schema, then serve on $PORT.
+CMD ["sh", "-c", "python scripts/migrate.py && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --app-dir services/api"]

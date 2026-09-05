@@ -41,6 +41,16 @@ Sign in with a seeded operator (password from `BTOS_DEV_PASSWORD` in `.env`):
 - `analyst@demo.blueteam.local` — analyst
 - `owner@demo.blueteam.local` — tenant owner
 
+## Production stack
+
+One production path only — see [docs/deployment.md](docs/deployment.md):
+
+- **Vercel** — Next.js Command Center  
+- **Railway** — FastAPI/Python control-plane container (Docker)  
+- **Supabase** — PostgreSQL control-plane database  
+- **GitHub / Actions / GHCR** — source, CI, API images  
+- **Docker Compose** — local dataplane (Redis, ClickHouse, OpenSearch, Redpanda, MinIO)
+
 ## Tests
 
 ```powershell
@@ -52,10 +62,10 @@ Required suites: unit, tenant isolation, detection, Blue Range, control-plane se
 ## Compose data plane
 
 ```powershell
-docker compose up postgres redis
+docker compose up postgres redis clickhouse opensearch redpanda minio
 ```
 
-SQLite is allowed for local and CI only. ClickHouse, OpenSearch, Redpanda, and MinIO are defined in Compose for Phase 2 wiring; they are reported as unconfigured rather than faked when unused.
+SQLite is allowed for local and CI only. ClickHouse, OpenSearch, Redpanda, and MinIO are defined in Compose for dataplane work; they are reported as unconfigured rather than faked when unused.
 
 ## Non-negotiables
 

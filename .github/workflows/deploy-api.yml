@@ -9,7 +9,7 @@ on:
       - "detections/**"
       - "infra/docker/Dockerfile.api"
       - "scripts/**"
-      - "fly.toml"
+      - "railway.toml"
   workflow_dispatch:
 
 jobs:

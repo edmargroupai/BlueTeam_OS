@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     api_port: int = 8080
     api_public_url: str = "http://127.0.0.1:8080"
     web_origin: str = "http://127.0.0.1:3000"
+    # Comma-separated explicit browser origins for CORS (required for production besides web_origin).
+    cors_origins: str = ""
+    # Optional regex for preview frontends (e.g. https://.*\\.vercel\\.app). Empty disables regex.
+    cors_origin_regex: str = ""
     database_url: str = "sqlite:///./data/blueteam.db"
     redis_url: str = ""
     clickhouse_url: str = ""
@@ -52,6 +56,29 @@ class Settings(BaseSettings):
     @property
     def oidc_configured(self) -> bool:
         return bool(self.oidc_issuer and self.oidc_jwks_url)
+
+    def cors_allow_origins(self) -> list[str]:
+        origins: list[str] = []
+        if self.cors_origins.strip():
+            origins.extend(item.strip() for item in self.cors_origins.split(",") if item.strip())
+        if self.web_origin.strip():
+            origins.append(self.web_origin.strip())
+        if not self.is_production:
+            origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+        deduped: list[str] = []
+        for origin in origins:
+            if origin and origin not in deduped:
+                deduped.append(origin)
+        return deduped
+
+    def cors_allow_origin_regex(self) -> str | None:
+        value = self.cors_origin_regex.strip()
+        if value:
+            return value
+        if not self.is_production:
+            # Local/dev convenience for Vercel preview testing against a local API.
+            return r"https://.*\.vercel\.app"
+        return None
 
 
 @lru_cache

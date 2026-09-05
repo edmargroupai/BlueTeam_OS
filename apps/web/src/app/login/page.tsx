@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import { api, setSession } from "@/lib/api";
+import { api, getApiUrl, setSession } from "@/lib/api";
 
 type LoginResponse = {
   access_token: string;
@@ -29,8 +29,7 @@ export default function LoginPage() {
         false,
       );
       localStorage.setItem("btos.token", login.access_token);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8080";
-      const tenants = await fetch(`${apiUrl}/api/v1/tenants`, {
+      const tenants = await fetch(`${getApiUrl()}/api/v1/tenants`, {
         headers: { Authorization: `Bearer ${login.access_token}` },
       }).then((r) => r.json() as Promise<TenantList>);
       const tenantId = tenants.items[0]?.id;

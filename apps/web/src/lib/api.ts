@@ -1,5 +1,3 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8080";
-
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -7,7 +5,37 @@ export class ApiError extends Error {
     message: string,
   ) {
     super(message);
+    this.name = "ApiError";
   }
+}
+
+/**
+ * Resolve the control-plane base URL.
+ * Development may use localhost. Production / non-local hosts fail closed
+ * when NEXT_PUBLIC_API_URL is missing (no silent localhost fallback).
+ */
+export function getApiUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV;
+  const onVercelProduction = vercelEnv === "production";
+  const onBrowserRemote =
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1";
+
+  if (onVercelProduction || onBrowserRemote) {
+    throw new ApiError(
+      503,
+      "API_URL_MISSING",
+      "NEXT_PUBLIC_API_URL is required in production. Set it to the Railway HTTPS API URL.",
+    );
+  }
+
+  return "http://127.0.0.1:8080";
 }
 
 export function getSession() {
@@ -37,7 +65,7 @@ export async function api<T>(path: string, init: RequestInit = {}, authed = true
     headers.set("Authorization", `Bearer ${session.token}`);
     headers.set("X-Tenant-ID", session.tenantId);
   }
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const response = await fetch(`${getApiUrl()}${path}`, { ...init, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new ApiError(
